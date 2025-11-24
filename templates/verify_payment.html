@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Payment - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Verify Payment</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Payment Details</h5>
+                            <p><strong>Student:</strong> {{ payment.agreement.student.get_full_name }} ({{ payment.agreement.student.student_id }})</p>
+                            <p><strong>Agreement:</strong> {{ payment.agreement }}</p>
+                            <p><strong>Amount Paid:</strong> {{ payment.amount_paid }}</p>
+                            <p><strong>Date Paid:</strong> {{ payment.date_paid }}</p>
+                            <p><strong>Payment Method:</strong> {{ payment.get_payment_method_display }}</p>
+                            <p><strong>Transaction Code:</strong> {{ payment.transaction_code }}</p>
+                            
+                            {% if payment.receipt %}
+                            <p><strong>Receipt:</strong> <a href="{{ payment.receipt.url }}" target="_blank" class="btn btn-sm btn-info">View Receipt</a></p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Verification</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                {{ form.as_p }}
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'manage_payments' %}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Verify Payment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

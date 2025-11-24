@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% block title %}Make Payment - OCSMS{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Make Payment</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Display messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Debug info -->
+                    {% if debug %}
+                    <div class="alert alert-info">
+                        <strong>Debug Info:</strong><br>
+                        Bank Accounts: {{ bank_accounts.count }}<br>
+                        Form Bank Choices: {{ form.bank_account.field.queryset.count }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Display form non-field errors -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Bank Account Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.bank_account.id_for_label }}" class="form-label">
+                                <strong>Bank Account *</strong>
+                            </label>
+                            {{ form.bank_account }}
+                            {% if form.bank_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.bank_account.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if not form.bank_account.field.queryset %}
+                                <div class="text-warning small mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    No active bank accounts available. Please contact administration.
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.agreement.id_for_label }}" class="form-label">
+                                <strong>Agreement *</strong>
+                            </label>
+                            {{ form.agreement }}
+                            {% if form.agreement.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.agreement.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if not form.agreement.field.queryset %}
+                                <div class="text-warning small mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    No accepted agreements found. Please submit an agreement first.
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.amount_paid.id_for_label }}" class="form-label">
+                                <strong>Amount Paid (ETB) *</strong>
+                            </label>
+                            {{ form.amount_paid }}
+                            {% if form.amount_paid.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.amount_paid.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">
+                                <strong>Payment Method *</strong>
+                            </label>
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.payment_method.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.receipt.id_for_label }}" class="form-label">
+                                <strong>Payment Receipt *</strong>
+                            </label>
+                            {{ form.receipt }}
+                            {% if form.receipt.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.receipt.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                Upload a clear copy of your payment receipt (PDF, JPG, or PNG, max 5MB)
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <button type="submit" class="btn btn-primary me-md-2">
+                                <i class="fas fa-paper-plane"></i> Submit Payment
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Payment Summary -->
+            {% if active_agreement %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Payment Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Total Cost:</strong> ETB {{ active_agreement.total_cost|floatformat:2 }}<br>
+                        <strong>Already Paid:</strong> ETB {{ total_paid|floatformat:2 }}<br>
+                        <strong>Remaining Balance:</strong> ETB {{ remaining_balance|floatformat:2 }}
+                    </div>
+                    {% if payment_progress.percentage > 0 %}
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ payment_progress.percentage }}%;" 
+                             aria-valuenow="{{ payment_progress.percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ payment_progress.percentage|floatformat:1 }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {{ payment_progress.percentage|floatformat:1 }}% paid (ETB {{ payment_progress.paid|floatformat:2 }} of ETB {{ payment_progress.total|floatformat:2 }})
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Bank Accounts -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university"></i> Available Bank Accounts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if bank_accounts %}
+                        <div class="list-group">
+                            {% for account in bank_accounts %}
+                            <div class="list-group-item">
+                                <h6 class="mb-2 text-primary">
+                                    <i class="fas fa-landmark"></i> {{ account.get_bank_name_display }}
+                                </h6>
+                                <div class="small">
+                                    <strong>Account Number:</strong><br>
+                                    <code class="text-success fs-6">{{ account.account_number }}</code><br>
+                                    <strong>Account Holder:</strong> {{ account.account_holder_name }}<br>
+                                    <strong>Branch:</strong> {{ account.branch }}<br>
+                                    {% if account.swift_code %}
+                                    <strong>SWIFT Code:</strong> {{ account.swift_code }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
+                            No bank accounts available
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Payment Instructions -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Payment Instructions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <ol class="ps-3">
+                            <li class="mb-2">Select the bank account you used for payment</li>
+                            <li class="mb-2">Select your cost sharing agreement</li>
+                            <li class="mb-2">Enter the payment amount in ETB</li>
+                            <li class="mb-2">Choose your payment method</li>
+                            <li class="mb-2">Upload a clear photo/scan of your receipt</li>
+                            <li class="mb-2">Submit for verification</li>
+                        </ol>
+                        <div class="alert alert-light border mt-3">
+                            <strong>Note:</strong> Payments require verification by the inland revenue officer before being applied to your account.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add some JavaScript to enhance the form -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Bootstrap styling to form elements
+    const formSelects = document.querySelectorAll('select');
+    formSelects.forEach(select => {
+        select.classList.add('form-select');
+    });
+    
+    const formInputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+    formInputs.forEach(input => {
+        input.classList.add('form-control');
+    });
+    
+    const formFileInputs = document.querySelectorAll('input[type="file"]');
+    formFileInputs.forEach(input => {
+        input.classList.add('form-control');
+    });
+    
+    // Show file name for file inputs
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+            const label = this.previousElementSibling;
+            if (label && label.tagName === 'LABEL') {
+                const fileInfo = document.createElement('small');
+                fileInfo.className = 'form-text text-muted';
+                fileInfo.textContent = 'Selected: ' + fileName;
+                
+                // Remove existing file info if any
+                const existingInfo = this.parentNode.querySelector('.file-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                fileInfo.className += ' file-info';
+                this.parentNode.appendChild(fileInfo);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.bank-account-card {
+    border-left: 4px solid #007bff;
+}
+.list-group-item {
+    border: 1px solid #dee2e6;
+    margin-bottom: 8px;
+    border-radius: 5px;
+}
+.progress {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}

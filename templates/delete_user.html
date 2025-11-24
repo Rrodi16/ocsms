@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete User</h4>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the user <strong>{{ user.username }}</strong>?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'manage_users' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

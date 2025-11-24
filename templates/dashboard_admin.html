@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - OCSMS{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Agreements</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_agreements }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-contract fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Payments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_payments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Bank Accounts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_bank_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-university fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Recent Users</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.get_role_display }}</td>
+                                    <td>{{ user.department|default:"N/A" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.is_active %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'edit_user' user.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'delete_user' user.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No users found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Recent Feedback</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in recent_feedbacks %}
+                                <tr>
+                                    <td>{{ feedback.student.username }}</td>
+                                    <td>{{ feedback.subject }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if feedback.status == 'responded' %}bg-success
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ feedback.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'respond_feedback' feedback.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply"></i> Respond
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No feedback found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'create_user' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-user-plus"></i> Create User
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_users' %}" class="btn btn-info btn-block">
+                                <i class="fas fa-users-cog"></i> Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_bank_accounts' %}" class="btn btn-success btn-block">
+                                <i class="fas fa-university"></i> Bank Accounts
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'clear_all_data' %}" class="btn btn-danger btn-block">
+                                <i class="fas fa-trash-alt"></i> Clear All Data
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

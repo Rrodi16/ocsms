@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Bank Account - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Delete Bank Account</h5>
+        </div>
+        <div class="card-body">
+            <p>Are you sure you want to delete the bank account <strong>{{ account.account_number }}</strong>?</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'manage_bank_accounts' %}" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

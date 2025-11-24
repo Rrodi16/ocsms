@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Create User - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create New User</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Improved error and success message display -->
+                    {% if messages %}
+                      {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                      {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                      {% csrf_token %}
+                      {{ form.non_field_errors }}
+                      
+                      {% for field in form %}
+                        <div class="mb-3">
+                          {{ field.label_tag }}
+                          {{ field }}
+                          {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text|safe }}</div>
+                          {% endif %}
+                          {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                              {% for error in field.errors %}
+                                <div>{{ error }}</div>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        </div>
+                      {% endfor %}
+                      
+                      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                          <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                          <button type="submit" class="btn btn-primary">Create User</button>
+                      </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

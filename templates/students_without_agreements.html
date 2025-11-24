@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Students Without Agreements - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Students Without Cost Sharing Agreements
+                        </h4>
+                        <div>
+                            <span class="badge bg-light text-dark fs-6">
+                                {{ total_count }} Students
+                            </span>
+                        </div>
+                    </div>
+                    <p class="mb-0 mt-2 small opacity-75">
+                        Academic Year: {{ current_academic_year_display }}
+                    </p>
+                </div>
+                
+                <!-- Filters -->
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Department</label>
+                            <select name="department" class="form-select">
+                                <option value="">All Departments</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>
+                                        {{ dept }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Faculty</label>
+                            <select name="faculty" class="form-select">
+                                <option value="">All Faculties</option>
+                                {% for faculty in faculties %}
+                                    <option value="{{ faculty }}" {% if selected_faculty == faculty %}selected{% endif %}>
+                                        {{ faculty }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Academic Year</label>
+                            <select name="year" class="form-select">
+                                <option value="">All Years</option>
+                                {% for year in years %}
+                                    <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>
+                                        {{ year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Apply Filters
+                            </button>
+                            <a href="{% url 'students_without_agreements' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-refresh me-1"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card-body bg-light">
+                    <div class="row g-3">
+                        <!-- Reminder Actions -->
+                        <div class="col-md-8">
+                            <div class="d-flex flex-wrap gap-3 align-items-end">
+                                <!-- Send to Filtered Students -->
+                                <div>
+                                    <form method="post" action="{% url 'send_reminder_notifications' %}" class="mb-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="department" value="{{ selected_department }}">
+                                        <input type="hidden" name="faculty" value="{{ selected_faculty }}">
+                                        <input type="hidden" name="year" value="{{ selected_year }}">
+                                        <button type="submit" class="btn btn-warning btn-lg">
+                                            <i class="fas fa-bell me-2"></i>Send Reminders to Filtered Students
+                                        </button>
+                                        <small class="form-text text-muted d-block mt-1">
+                                            Send notifications to {{ total_count }} filtered students
+                                        </small>
+                                    </form>
+                                </div>
+                                
+                                <!-- Send to ALL Students -->
+                                <div>
+                                    <form method="post" action="{% url 'send_reminder_notifications' %}" class="mb-0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="force_all" value="true">
+                                        <button type="submit" class="btn btn-outline-danger btn-lg">
+                                            <i class="fas fa-broadcast-tower me-2"></i>Send to ALL Students
+                                        </button>
+                                        <small class="form-text text-muted d-block mt-1">
+                                            Send to all students without agreements (ignore filters)
+                                        </small>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Download Actions -->
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex flex-column align-items-end">
+                                <a href="{% url 'download_students_without_agreements' %}?department={{ selected_department }}&faculty={{ selected_faculty }}&year={{ selected_year }}" 
+                                   class="btn btn-success btn-lg mb-2">
+                                    <i class="fas fa-download me-2"></i>Download Filtered CSV
+                                </a>
+                                <a href="{% url 'download_students_without_agreements' %}" 
+                                   class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-file-csv me-1"></i>Download All CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Summary -->
+                    {% if selected_department or selected_faculty or selected_year %}
+                    <div class="mt-3 p-3 bg-white rounded border">
+                        <h6 class="fw-bold mb-2">Active Filters:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if selected_department %}
+                            <span class="badge bg-primary">Department: {{ selected_department }}</span>
+                            {% endif %}
+                            {% if selected_faculty %}
+                            <span class="badge bg-info">Faculty: {{ selected_faculty }}</span>
+                            {% endif %}
+                            {% if selected_year %}
+                            <span class="badge bg-secondary">Year: {{ selected_year }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Students List -->
+                <div class="card-body">
+                    {% if students %}
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2 fs-5"></i>
+                            <div>
+                                <strong>Reminder:</strong> These students haven't submitted cost sharing agreements for {{ current_academic_year_display }}.
+                                They will receive both in-app notifications and email reminders.
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student ID</th>
+                                        <th>Full Name</th>
+                                        <th>Department</th>
+                                        <th>Faculty</th>
+                                        <th>Academic Year</th>
+                                        <th>Phone</th>
+                                        <th>Region</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td class="text-muted">{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong class="text-primary">{{ student.student_id }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ student.full_name }}</strong>
+                                        </td>
+                                        <td>{{ student.department }}</td>
+                                        <td>{{ student.faculty }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ student.academic_year }}</span>
+                                        </td>
+                                        <td>
+                                            {% if student.phone_number %}
+                                                <a href="tel:{{ student.phone_number }}" class="text-decoration-none">
+                                                    {{ student.phone_number }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ student.region|default:"-" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#studentModal{{ student.id }}"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="{% url 'download_students_without_agreements' %}?student_id={{ student.student_id }}" 
+                                                   class="btn btn-outline-success"
+                                                   title="Download Student Info">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Student Details Modal -->
+                                    <div class="modal fade" id="studentModal{{ student.id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-user-graduate me-2"></i>
+                                                        Student Details
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <h6 class="fw-bold text-primary">Personal Information</h6>
+                                                                <p><strong>Student ID:</strong> {{ student.student_id }}</p>
+                                                                <p><strong>Full Name:</strong> {{ student.full_name }}</p>
+                                                                <p><strong>Sex:</strong> {{ student.sex|default:"Not specified" }}</p>
+                                                                <p><strong>Phone:</strong> 
+                                                                    {% if student.phone_number %}
+                                                                        <a href="tel:{{ student.phone_number }}">{{ student.phone_number }}</a>
+                                                                    {% else %}
+                                                                        <span class="text-muted">Not provided</span>
+                                                                    {% endif %}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <h6 class="fw-bold text-primary">Academic Information</h6>
+                                                                <p><strong>Department:</strong> {{ student.department }}</p>
+                                                                <p><strong>Faculty:</strong> {{ student.faculty }}</p>
+                                                                <p><strong>Academic Year:</strong> {{ student.academic_year }}</p>
+                                                                <p><strong>Region:</strong> {{ student.region|default:"Not specified" }}</p>
+                                                                <p><strong>Woreda:</strong> {{ student.woreda|default:"Not specified" }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {% if student.mother_name or student.mother_phone %}
+                                                    <div class="row mt-3">
+                                                        <div class="col-12">
+                                                            <h6 class="fw-bold text-primary">Parent/Guardian Information</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <p><strong>Mother's Name:</strong> {{ student.mother_name|default:"Not provided" }}</p>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <p><strong>Mother's Phone:</strong> 
+                                                                        {% if student.mother_phone %}
+                                                                            <a href="tel:{{ student.mother_phone }}">{{ student.mother_phone }}</a>
+                                                                        {% else %}
+                                                                            <span class="text-muted">Not provided</span>
+                                                                        {% endif %}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                    
+                                                    <div class="alert alert-warning mt-3">
+                                                        <div class="d-flex">
+                                                            <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                                                            <div>
+                                                                <strong>Action Required:</strong> This student has not filled the cost sharing agreement 
+                                                                for academic year {{ current_academic_year_display }}. They will be included in reminder notifications.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times me-1"></i>Close
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h4 class="text-success">All Students Have Agreements!</h4>
+                            <p class="text-muted">
+                                Great news! All students have filled their cost sharing agreements for {{ current_academic_year_display }}.
+                            </p>
+                            <div class="mt-4">
+                                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Return to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filter changes
+    const filterSelects = document.querySelectorAll('select[name="department"], select[name="faculty"], select[name="year"]');
+    
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    
+    // Confirm before sending to all students
+    const sendAllForm = document.querySelector('form[action*="send_reminder_notifications"] input[name="force_all"]');
+    if (sendAllForm) {
+        sendAllForm.closest('form').addEventListener('submit', function(e) {
+            if (this.querySelector('input[name="force_all"]')) {
+                const confirmed = confirm('Are you sure you want to send reminders to ALL students without agreements? This will ignore any active filters.');
+                if (!confirmed) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

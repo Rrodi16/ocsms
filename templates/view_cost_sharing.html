@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}My Cost Sharing Agreements - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">My Cost Sharing Agreements</h2>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Academic Year</th>
+                            <th>Total Cost</th>
+                            <th>Services</th>
+                            <th>Service Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agreement in agreements %}
+                        <tr>
+                            <td>{{ agreement.academic_year }}</td>
+                            <td>{{ agreement.total_cost }}</td>
+                            <td>
+                                {% if agreement.education_service %}Education {% endif %}
+                                {% if agreement.food_service %}Food {% endif %}
+                                {% if agreement.dormitory_service %}Dormitory{% endif %}
+                            </td>
+                            <td>{{ agreement.get_service_type_display }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if agreement.status == 'completed' %}bg-success
+                                    {% elif agreement.status == 'pending' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ agreement.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'print_cost_sharing' agreement.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-print"></i> Print
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No agreements found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{% url 'fill_cost_sharing' %}" class="btn btn-primary">New Agreement</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Status - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Student Payment Status</h2>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Student ID</th>
+                            <th>Department</th>
+                            <th>Total Cost</th>
+                            <th>Amount Paid</th>
+                            <th>Remaining</th>
+                            <th>Payment Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agreement in agreements %}
+                        <tr>
+                            <td>{{ agreement.student.get_full_name }}</td>
+                            <td>{{ agreement.student.student_id }}</td>
+                            <td>{{ agreement.department }}</td>
+                            <td>ETB {{ agreement.total_cost|floatformat:2 }}</td>
+                            <td>ETB {{ agreement.total_paid|floatformat:2 }}</td>
+                            <td>ETB {{ agreement.remaining_balance|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if agreement.remaining_balance <= 0 and agreement.total_cost > 0 %}bg-success
+                                    {% elif agreement.total_paid > 0 %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    {% if agreement.remaining_balance <= 0 and agreement.total_cost > 0 %}Paid
+                                    {% elif agreement.total_paid > 0 %}Partial
+                                    {% else %}Unpaid{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No agreements found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Bank Accounts - OCSMS{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Bank Accounts</h2>
+        <div>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Bank Accounts for Payment Verification</h5>
+            <div>
+                <a href="{% url 'download_student_information' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-download me-1"></i> Download Student Information
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Bank Name</th>
+                            <th>Account Number</th>
+                            <th>Account Holder</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in bank_accounts %}
+                        <tr>
+                            <td>{{ account.bank_name }}</td>
+                            <td>{{ account.account_number }}</td>
+                            <td>{{ account.account_holder }}</td>
+                            <td>{{ account.branch }}</td>
+                            <td>
+                                <span class="badge {% if account.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#accountDetailsModal{{ account.id }}">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Account Details Modal -->
+                        <div class="modal fade" id="accountDetailsModal{{ account.id }}" tabindex="-1" aria-labelledby="accountDetailsModalLabel{{ account.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="accountDetailsModalLabel{{ account.id }}">Bank Account Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Bank Name:</strong> {{ account.bank_name }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Account Number:</strong> {{ account.account_number }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Account Holder:</strong> {{ account.account_holder }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Branch:</strong> {{ account.branch }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <p><strong>Status:</strong> 
+                                                    <span class="badge {% if account.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                        {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No bank accounts found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

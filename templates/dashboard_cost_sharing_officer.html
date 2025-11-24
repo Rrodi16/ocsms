@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Cost Sharing Officer Dashboard - OCSMS{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <h2 class="mb-4">Cost Sharing Officer Dashboard</h2>
+    
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Agreements</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ agreements.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-contract fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Cost Structures</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cost_structures.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-table fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Pending Feedback</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_feedback.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Active Notices</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_notices.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Cost Sharing Agreements Pending Approval</h6>
+                </div>
+                <div class="card-body">
+                    {% if agreements %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Academic Year</th>
+                                    <th>Department</th>
+                                    <th>Total Cost</th>
+                                    <th>Service Type</th>
+                                    <th>Date Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agreement in agreements %}
+                                <tr>
+                                    <td>{{ agreement.student.student_id|default:"N/A" }}</td>
+                                    <td>{{ agreement.student.get_full_name|default:agreement.student.username }}</td>
+                                    <td>{{ agreement.academic_year }}</td>
+                                    <td>{{ agreement.department }}</td>
+                                    <td>{{ agreement.total_cost }}</td>
+                                    <td>{{ agreement.get_service_type_display|default:agreement.service_type }}</td>
+                                    <td>{{ agreement.date_filled|date:"Y-m-d"|default:"N/A" }}</td>
+                                    <td>
+                                        <!-- add accept/reject action buttons for cost officer -->
+                                        <a href="{% url 'agreement_set_status' agreement.id 'accept' %}" class="btn btn-sm btn-success" title="Accept Agreement">
+                                            <i class="fas fa-check"></i> Accept
+                                        </a>
+                                        <a href="{% url 'agreement_set_status' agreement.id 'reject' %}" class="btn btn-sm btn-danger" title="Reject Agreement">
+                                            <i class="fas fa-times"></i> Reject
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No pending agreements found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Recent Accepted Agreements</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Academic Year</th>
+                                    <th>Total Cost</th>
+                                    <th>Date Accepted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agreement in accepted_agreements|slice:":5" %}
+                                <tr>
+                                    <td>{{ agreement.student.get_full_name|default:agreement.student.username }}</td>
+                                    <td>{{ agreement.academic_year }}</td>
+                                    <td>{{ agreement.total_cost }}</td>
+                                    <td>{{ agreement.date_accepted|date:"Y-m-d"|default:"N/A" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No accepted agreements found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Cost Structures</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Year</th>
+                                    <th>Total Cost</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for structure in cost_structures|slice:":5" %}
+                                <tr>
+                                    <td>{{ structure.department }}</td>
+                                    <td>{{ structure.year }}</td>
+                                    <td>{{ structure.total_cost }}</td>
+                                    <td>
+                                        <a href="{% url 'update_cost_structure' structure.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No cost structures found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'manage_cost_structure' %}" class="btn btn-primary">Manage All Cost Structures</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

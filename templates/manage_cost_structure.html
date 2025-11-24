@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Cost Structure - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Manage Cost Structure</h2>
+    
+    <!-- Success/Error Messages -->
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="m-0 font-weight-bold">Add New Cost Structure</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="costStructureForm">
+                {% csrf_token %}
+                
+                <!-- Manual form rendering for better control -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                        <div class="text-danger small">{{ form.department.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.year.id_for_label }}" class="form-label">Year</label>
+                        {{ form.year }}
+                        {% if form.year.errors %}
+                        <div class="text-danger small">{{ form.year.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.education_cost.id_for_label }}" class="form-label">Education Cost</label>
+                        {{ form.education_cost }}
+                        {% if form.education_cost.errors %}
+                        <div class="text-danger small">{{ form.education_cost.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.food_cost.id_for_label }}" class="form-label">Food Cost</label>
+                        {{ form.food_cost }}
+                        {% if form.food_cost.errors %}
+                        <div class="text-danger small">{{ form.food_cost.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.dormitory_cost.id_for_label }}" class="form-label">Dormitory Cost</label>
+                        {{ form.dormitory_cost }}
+                        {% if form.dormitory_cost.errors %}
+                        <div class="text-danger small">{{ form.dormitory_cost.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Auto-calculated Total Cost Display -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Total Cost (Auto-calculated)</label>
+                            <div class="form-control-plaintext border rounded p-2 bg-light" id="totalCostDisplay">
+                                $0.00
+                            </div>
+                            <small class="form-text text-muted">
+                                Total cost is automatically calculated from the sum of all costs above.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">Save Cost Structure</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="m-0 font-weight-bold">Existing Cost Structures</h5>
+            <span class="badge bg-light text-dark">{{ cost_structures.count }} records</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Education Cost</th>
+                            <th>Food Cost</th>
+                            <th>Dormitory Cost</th>
+                            <th>Total Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for structure in cost_structures %}
+                        <tr>
+                            <td>{{ structure.department }}</td>
+                            <td>{{ structure.year }}</td>
+                            <td>${{ structure.education_cost }}</td>
+                            <td>${{ structure.food_cost }}</td>
+                            <td>${{ structure.dormitory_cost }}</td>
+                            <td class="fw-bold">${{ structure.total_cost }}</td>
+                            <td>
+                                <a href="{% url 'update_cost_structure' structure.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'delete_cost_structure' structure.id %}" class="btn btn-sm btn-danger" 
+                                   onclick="return confirm('Are you sure you want to delete this cost structure?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i><br>
+                                No cost structures found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for auto-calculation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const educationCost = document.getElementById('{{ form.education_cost.id_for_label }}');
+    const foodCost = document.getElementById('{{ form.food_cost.id_for_label }}');
+    const dormitoryCost = document.getElementById('{{ form.dormitory_cost.id_for_label }}');
+    const totalCostDisplay = document.getElementById('totalCostDisplay');
+    
+    function calculateTotal() {
+        const education = parseFloat(educationCost.value) || 0;
+        const food = parseFloat(foodCost.value) || 0;
+        const dormitory = parseFloat(dormitoryCost.value) || 0;
+        
+        const total = education + food + dormitory;
+        totalCostDisplay.textContent = '$' + total.toFixed(2);
+    }
+    
+    // Add event listeners
+    [educationCost, foodCost, dormitoryCost].forEach(input => {
+        input.addEventListener('input', calculateTotal);
+        input.addEventListener('change', calculateTotal);
+    });
+    
+    // Calculate initial total
+    calculateTotal();
+});
+</script>
+
+<style>
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+#totalCostDisplay {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #198754;
+}
+</style>
+{% endblock %}

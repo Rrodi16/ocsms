@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Registrar Officer Dashboard - OCSMS{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Registrar Officer Dashboard</h2>
+    
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Students Uploaded</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ students_uploaded }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add this to the registrar dashboard -->
+<div class="col-md-6">
+    <div class="card border-warning">
+        <div class="card-header bg-warning text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Students Without Agreements
+            </h6>
+        </div>
+        <div class="card-body">
+            {% with students_without_agreements_count=students_without_agreements_count %}
+            <h3 class="text-warning">{{ students_without_agreements_count }}</h3>
+            <p class="mb-2">Students haven't filled cost sharing agreements</p>
+            <a href="{% url 'students_without_agreements' %}" class="btn btn-warning btn-sm">
+                View Details
+            </a>
+            {% endwith %}
+        </div>
+    </div>
+</div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Agreements</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_agreements }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-contract fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Payments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_payments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 dashboard-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Active Notices</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_notices|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'upload_student_data' %}" class="btn btn-primary btn-block">
+                                <i class="fas fa-upload"></i> Upload Student Data
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'download_student_data' %}" class="btn btn-success btn-block">
+                                <i class="fas fa-download"></i> Download Student Data
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'view_notices' %}" class="btn btn-info btn-block">
+                                <i class="fas fa-bell"></i> View Notices
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Recent Notices</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Posted By</th>
+                                    <th>Date Posted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for notice in active_notices|slice:":5" %}
+                                <tr>
+                                    <td>{{ notice.title }}</td>
+                                    <td>{{ notice.posted_by.get_full_name|default:notice.posted_by.username }}</td>
+                                    <td>{{ notice.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'view_notices' %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No notices found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

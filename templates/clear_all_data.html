@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Confirm Clear All Data</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background:#f7f7f7; }
+    .card { background: white; padding: 1.5rem; border-radius: 6px; max-width:700px; margin:0 auto; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+    .danger { color:#a00; font-weight:700; }
+    .actions { margin-top:1rem; display:flex; gap:1rem; }
+    .btn { padding:0.6rem 1rem; border:0; border-radius:4px; cursor:pointer; }
+    .btn-danger { background:#c62828; color:white; }
+    .btn-cancel { background:#e0e0e0; color:#111; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 class="danger">Clear All Data — Confirmation</h1>
+    <p>
+      This action will permanently delete all users, agreements, payments, notices,
+      feedback, student records and bank accounts from the system. This cannot be undone.
+    </p>
+    <p class="danger">Only proceed if you are absolutely sure.</p>
+
+    <form method="post" style="margin-top:1rem;">
+      {% csrf_token %}
+      <input type="hidden" name="confirm" value="yes">
+      <div class="actions">
+        <button type="submit" class="btn btn-danger">Yes — Delete all data</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-cancel">Cancel / Back to dashboard</a>
+      </div>
+    </form>
+
+    <hr style="margin:1.5rem 0;">
+    <small>Recommended: backup your database before performing this operation.</small>
+  </div>
+</body>
+</html>
