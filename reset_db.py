@@ -9,6 +9,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ocsms.settings')
 django.setup()
 
 from django.core.management import execute_from_command_line
+#This imports Django’s database connection object
 from django.db import connection
 
 def reset_database():
