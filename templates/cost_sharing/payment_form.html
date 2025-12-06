@@ -1,0 +1,16 @@
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Amount</label>
+    <input name="amount" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>TIN (for cost share)</label>
+    <input name="tin" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Receipt (upload)</label>
+    <input type="file" name="receipt" class="form-control" required>
+  </div>
+  <button class="btn btn-primary">Submit Payment</button>
+</form>

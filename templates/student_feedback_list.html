@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}My Feedback - OCSMS{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h3>My Feedback</h3>
+  <div class="card shadow">
+    <div class="card-body">
+      {% if feedbacks %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr><th>Subject</th><th>Date</th><th>Status</th><th>Response</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for f in feedbacks %}
+            <tr>
+              <td>{{ f.subject }}</td>
+              <td>{{ f.date_submitted|date:"N j, Y, P" }}</td>
+              <td>
+                <span class="badge {% if f.status == 'responded' %}bg-success{% else %}bg-secondary{% endif %}">
+                  {{ f.status }}
+                </span>
+              </td>
+              <td>
+                {% if f.status == 'responded' and f.response %}
+                  <small class="text-muted">{{ f.response|truncatechars:80 }}</small>
+                {% else %}
+                  <small class="text-muted">No response yet</small>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'student_feedback_detail' f.id %}" class="btn btn-sm btn-primary">View</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted">You have not submitted any feedback yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

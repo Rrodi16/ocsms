@@ -1,0 +1,21 @@
+<h3>Transactions for {{ account.name }}</h3>
+<table class="table">
+  <thead><tr><th>Time</th><th>Ref</th><th>Amount</th><th>Details</th><th>Payment</th></tr></thead>
+  <tbody>
+  {% for t in transactions %}
+    <tr>
+      <td>{{ t.timestamp }}</td>
+      <td>{{ t.reference }}</td>
+      <td>{{ t.amount }}</td>
+      <td>{{ t.details }}</td>
+      <td>
+        {% if t.payment %}
+          <a href="{% url 'payment_detail' t.payment.id %}">View Payment</a>
+        {% else %}
+          ---
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

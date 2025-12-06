@@ -1,0 +1,637 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - OCSMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styles for the home page */
+    .hero-section {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        z-index: 1;
+    }
+    
+    .top-nav {
+        background-color: #2c3e50;
+        padding: 10px 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .top-nav .nav-link {
+        color: white !important;
+        font-weight: 500;
+        margin: 0 15px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .top-nav .nav-link:hover {
+        color: #87CEEB !important;
+    }
+    
+    .top-nav .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: 0;
+        left: 50%;
+        background-color: #87CEEB;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+    
+    .top-nav .nav-link:hover::after {
+        width: 100%;
+    }
+    
+    .feature-card {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s ease;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .feature-card .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .feature-section {
+        padding: 80px 0;
+    }
+    
+    .section-title {
+        position: relative;
+        margin-bottom: 50px;
+        text-align: center;
+    }
+    
+    .section-title h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+    
+    .section-title p {
+        font-size: 1.2rem;
+        color: #7f8c8d;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #87CEEB, #4682B4);
+        border-radius: 2px;
+    }
+    
+    .about-section {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .services-section {
+        background: linear-gradient(to right, #eae6ffff, #ffffffff);
+        padding: 80px 0;
+    }
+    
+    .help-section {
+        background-color: #f1f8ff;
+        padding: 80px 0;
+    }
+    
+    .contact-section {
+        background: linear-gradient(135deg, #1a2a6c, #4682B4);
+        color: white;
+        padding: 80px 0;
+    }
+    
+    .testimonial-card {
+        background-color: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .testimonial-card .quote {
+        font-size: 4rem;
+        color: #87CEEB;
+        line-height: 0;
+        height: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .testimonial-card p {
+        font-style: italic;
+        margin-bottom: 20px;
+    }
+    
+    .testimonial-card .client {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .floating {
+        animation-name: floating;
+        animation-duration: 3s;
+        animation-iteration-count: infinite;
+        animation-timing-function: ease-in-out;
+    }
+    
+    @keyframes floating {
+        0% { transform: translate(0, 0px); }
+        50% { transform: translate(0, -10px); }
+        100% { transform: translate(0, -0px); }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .counter {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #4682B4;
+    }
+    
+    .stats-card {
+        text-align: center;
+        padding: 30px 20px;
+        border-radius: 15px;
+        background-color: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .stats-card i {
+        font-size: 3rem;
+        color: #87CEEB;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Navigation Bar -->
+<nav class="top-nav">
+    <div class="container">
+        <div class="d-flex justify-content-center">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#services">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#help">Help</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="hero-section">
+    <div class="hero-content">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-4 floating">Online Cost Sharing Management System</h1>
+            <h2 class="lead mb-5"><marquee>Streamlining cost sharing processes for Mekdela Amba University</marquee></h2>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'login' %}" class="btn btn-light btn-lg px-4 pulse">Login Now</a>
+                <a href="#about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stats-card">
+                    <i class="fas fa-user-graduate"></i>
+                    <div class="counter" data-target="5000">5000+</div>
+                    <p>Active Students</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stats-card">
+                    <i class="fas fa-file-contract"></i>
+                    <div class="counter" data-target="3500">3500+</div>
+                    <p>Agreements</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stats-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div class="d-flex align-items-baseline justify-content-center">
+                        <div class="counter" data-target="98">98%</div><span class="ms-1">%</span>
+                    </div>
+                    <p>Payment Success</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="stats-card">
+                    <i class="fas fa-trophy"></i>
+                    <div class="counter" data-target="15">10+</div>
+                    <p>Years of Service</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>About Us</h2>
+            <p>Learn more about our mission and values</p>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <h3 class="mb-4">Our Mission</h3>
+                <p class="mb-4">The Online Cost Sharing Management System (OCSMS) is designed to streamline the cost sharing processes at Mekdela Amba University. Our mission is to provide a transparent, efficient, and user-friendly platform for students and staff to manage cost sharing agreements and payments.</p>
+                <p>Our system integrates modern technology with proven financial management practices to create a seamless experience for all users.</p>
+                <div class="mt-4">
+                    <a href="#services" class="btn btn-primary">Our Services</a>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="row">
+                    <div class="col-6 mb-4">
+                        <div class="feature-card bg-primary text-white p-4 text-center">
+                            <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                            <h5>Secure</h5>
+                            <p>Your data is protected with advanced security measures</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-4">
+                        <div class="feature-card bg-success text-white p-4 text-center">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <h5>Reliable</h5>
+                            <p>99.9% uptime guarantee for uninterrupted service</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-4">
+                        <div class="feature-card bg-info text-white p-4 text-center">
+                            <i class="fas fa-tachometer-alt fa-3x mb-3"></i>
+                            <h5>Fast</h5>
+                            <p>Quick processing of all transactions and requests</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-4">
+                        <div class="feature-card bg-warning text-white p-4 text-center">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <h5>User-Friendly</h5>
+                            <p>Intuitive interface designed for all users</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Our Services</h2>
+            <p>Comprehensive solutions for all your cost sharing needs</p>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card">
+                    <img src="media\imagesCafe.jpg" class="card-img-top" alt="Cost Sharing Agreements">
+                    <div class="card-body">
+                        <h4 class="card-title">Cost Sharing Agreements</h4>
+                        <p class="card-text">Students can easily fill and manage their cost sharing agreements online with our intuitive interface.</p>
+                        <a href="#" class="btn btn-primary mt-3">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card">
+                    <img src="media\mobile-money-transfer.jpg" class="card-img-top" alt="Payment Management">
+                    <div class="card-body">
+                        <h4 class="card-title">Payment Management</h4>
+                        <p class="card-text">Secure and efficient payment processing with real-time status updates and receipt generation.</p>
+                        <a href="#" class="btn btn-primary mt-3">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card">
+                    <img src="media\studentManagment.webp" class="card-img-top" alt="Student Data Management">
+                    <div class="card-body">
+                        <h4 class="card-title">Student Data Management</h4>
+                        <p class="card-text">Comprehensive student data management with bulk upload capabilities and data validation.</p>
+                        <a href="#" class="btn btn-primary mt-3">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2>Testimonials</h2>
+            <p>What our users say about us</p>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>OCSMS has transformed how we manage cost sharing at our university. The system is intuitive and efficient.</p>
+                    <div class="client">Mr.Leweyehu, University Administrator</div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>As a student, I love how easy it is to fill out my cost sharing agreement and make payments online.</p>
+                    <div class="client">Rodas, 3rd Year Student</div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="testimonial-card">
+                    <div class="quote">"</div>
+                    <p>The payment verification process is now seamless. I can process payments in half the time it used to take.</p>
+                    <div class="client">Habtamu, Inland Revenue Officer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Help Section -->
+<section id="help" class="help-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Help & Support</h2>
+            <p>We're here to help you every step of the way</p>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <h3 class="mb-4">Frequently Asked Questions</h3>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                How do I create a cost sharing agreement?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                To create a cost sharing agreement, log in to your student account, navigate to the "Cost Sharing" section, and fill out the online form with your details.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                What payment methods are accepted?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                We accept bank transfers, mobile money, and cash payments at designated university offices. All online payments are processed securely.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                How can I check my payment status?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can check your payment status by logging into your account and navigating to the "Payment History" section. All your payments and their status will be displayed there.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-5">
+                        <h3 class="mb-4">Contact Support</h3>
+                        <p>If you need further assistance, our support team is ready to help you.</p>
+                        <form>
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="name" placeholder="Your Name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" placeholder="Your Email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="4" placeholder="Your Message"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="container">
+        <div class="section-title">
+            <h2 style="color: white;">Get In Touch</h2>
+            <p style="color: rgba(255,255,255,0.8);">We'd love to hear from you</p>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-map-marker-alt fa-3x me-3"></i>
+                    <div>
+                        <h5>Address</h5>
+                        <p>Mekdela Amba University, Main Campus, Ethiopia</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-phone fa-3x me-3"></i>
+                    <div>
+                        <h5>Phone</h5>
+                        <p>+251 123 456 789</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-envelope fa-3x me-3"></i>
+                    <div>
+                        <h5>Email</h5>
+                        <p>support@mau.edu.et</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#" class="btn btn-light btn-lg"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="btn btn-light btn-lg"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="btn btn-light btn-lg"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="btn btn-light btn-lg"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+    
+    // Add active class to navigation items based on scroll position
+    window.addEventListener('scroll', () => {
+        let current = '';
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.top-nav .nav-link');
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+    
+    // Counter animation
+    const counters = document.querySelectorAll('.counter');
+    const speed = 200;
+    
+    const countUp = (counter) => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText;
+        const increment = target / speed;
+        
+        if (count < target) {
+            counter.innerText = Math.ceil(count + increment);
+            setTimeout(() => countUp(counter), 10);
+        } else {
+            counter.innerText = target;
+        }
+    };
+    
+    // Intersection Observer for counter animation
+    const observerOptions = {
+        threshold: 0.7
+    };
+    
+    const observerCallback = (entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const counter = entry.target.querySelector('.counter');
+                const target = counter.innerText;
+                counter.setAttribute('data-target', target);
+                counter.innerText = '0';
+                countUp(counter);
+                observer.unobserve(entry.target);
+            }
+        });
+    };
+    
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    
+    document.querySelectorAll('.stats-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+{% endblock %}

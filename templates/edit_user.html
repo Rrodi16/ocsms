@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">✏️ Edit User: {{ user.username }}</h4>
+                    <div>
+                        {% if user.is_superuser %}
+                        <span class="badge bg-danger">Superuser</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <!-- Left Column - Basic Info -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">👤 Basic Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Username</label>
+                                            {{ form.username }}
+                                            {% if form.username.help_text %}
+                                            <div class="form-text">{{ form.username.help_text }}</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Email Address</label>
+                                            {{ form.email }}
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">First Name</label>
+                                                    {{ form.first_name }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Last Name</label>
+                                                    {{ form.last_name }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone Number</label>
+                                            {{ form.phone }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column - Role & Security -->
+                            <div class="col-md-6">
+                                <!-- Role Selection -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">🎯 User Role & Department</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">User Role</label>
+                                            {{ form.role }}
+                                            <div class="form-text">
+                                                Determines what the user can access in the system
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Department</label>
+                                            {{ form.department }}
+                                        </div>
+                                        
+                                        <div class="mb-3" id="studentFields">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Student ID</label>
+                                                    {{ form.student_id }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Year of Study</label>
+                                                    {{ form.year_of_study }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Password Management -->
+                                <div class="card mb-4 border-warning">
+                                    <div class="card-header bg-warning">
+                                        <h6 class="mb-0">🔑 Password Management</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">New Password</label>
+                                            <div class="input-group">
+                                                {{ form.new_password }}
+                                                <button type="button" class="btn btn-outline-secondary" 
+                                                        onclick="generatePassword()">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                            </div>
+                                            {% if form.new_password.help_text %}
+                                            <div class="form-text">{{ form.new_password.help_text }}</div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Suggested: <code id="suggestedPassword">{{ user.username }}@123</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Status -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">⚙️ Account Status</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch mb-3">
+                                            {{ form.is_active }}
+                                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                Active Account
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        {% if user != request.user and not user.is_superuser %}
+                                        <div class="form-check form-switch mb-3">
+                                            {{ form.is_staff }}
+                                            <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                                                Staff Access
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-end">
+                                            <small class="text-muted">
+                                                Last login: {% if user.last_login %}{{ user.last_login|date:"M d, Y" }}{% else %}Never{% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'manage_users' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Users
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Update User
+                                </button>
+                                {% if not user.is_superuser and user != request.user %}
+                                <a href="{% url 'delete_user' user.pk %}" class="btn btn-danger"
+                                   onclick="return confirm('Are you sure you want to delete {{ user.username }}?')">
+                                    <i class="fas fa-trash"></i> Delete User
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide student fields based on role
+function toggleStudentFields() {
+    const roleSelect = document.getElementById('{{ form.role.id_for_label }}');
+    const studentFields = document.getElementById('studentFields');
+    
+    function updateFields() {
+        if (roleSelect.value === 'student') {
+            studentFields.style.display = 'block';
+        } else {
+            studentFields.style.display = 'none';
+        }
+    }
+    
+    roleSelect.addEventListener('change', updateFields);
+    updateFields(); // Initial call
+}
+
+// Generate password function
+function generatePassword() {
+    const username = '{{ user.username }}';
+    const randomNum = Math.floor(Math.random() * 1000);
+    const newPassword = `${username}@${randomNum}`;
+    document.getElementById('{{ form.new_password.id_for_label }}').value = newPassword;
+    document.getElementById('suggestedPassword').textContent = newPassword;
+}
+
+// Auto-generate password on focus if empty
+document.getElementById('{{ form.new_password.id_for_label }}').addEventListener('focus', function() {
+    if (!this.value) {
+        generatePassword();
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    toggleStudentFields();
+});
+</script>
+
+<style>
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+.card-header h6 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+</style>
+{% endblock %}

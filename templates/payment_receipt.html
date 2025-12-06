@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Receipt - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Payment Receipt</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Payment Information</h5>
+                    <p><strong>Student:</strong> {{ payment.agreement.student.get_full_name }}</p>
+                    <p><strong>Student ID:</strong> {{ payment.agreement.student.student_id }}</p>
+                    <p><strong>Agreement:</strong> {{ payment.agreement }}</p>
+                    <p><strong>Amount Paid:</strong> {{ payment.amount_paid }}</p>
+                    <p><strong>Date Paid:</strong> {{ payment.date_paid }}</p>
+                    <p><strong>Payment Method:</strong> {{ payment.get_payment_method_display }}</p>
+                    <p><strong>Transaction Code:</strong> {{ payment.transaction_code }}</p>
+                    <p><strong>Status:</strong> {{ payment.get_status_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Verification Details</h5>
+                    {% if payment.verified_by %}
+                    <p><strong>Verified By:</strong> {{ payment.verified_by.get_full_name }}</p>
+                    <p><strong>Verified At:</strong> {{ payment.verified_at }}</p>
+                    {% else %}
+                    <p><em>Not yet verified</em></p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if payment.notes %}
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5>Notes</h5>
+                    <p>{{ payment.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Receipt
+                </button>
+                <a href="{% url 'payment_history' %}" class="btn btn-secondary">Back to Payment History</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

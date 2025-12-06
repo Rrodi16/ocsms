@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Bank Accounts - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Manage Bank Accounts</h2>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Bank Accounts</h5>
+            <a href="{% url 'manage_bank_accounts' %}#add-account" class="btn btn-light">Add New Account</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Account Number</th>
+                            <th>Bank Name</th>
+                            <th>Account Holder</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in bank_accounts %}
+                        <tr>
+                            <td>{{ account.account_number }}</td>
+                            <td>{{ account.get_bank_name_display }}</td>
+                            <td>{{ account.account_holder }}</td>
+                            <td>{{ account.branch }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if account.is_active %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {% if account.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_bank_account' account.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'delete_bank_account' account.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No bank accounts found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow mt-4" id="add-account">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Add New Bank Account</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">Add Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1486 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fill Cost Sharing Agreement - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0 text-center">
+                        <i class="fas fa-file-contract me-2"></i>
+                        Cost Sharing Agreement Form
+                    </h4>
+                    <p class="text-center mb-0 mt-2 opacity-75">Please fill all required fields accurately</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Display messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Academic Information Alert -->
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-user-graduate me-2"></i>
+                        <strong>Your Academic Information:</strong> 
+                        Department: <strong>{{ student_department|default:"Not set" }}</strong> | 
+                        Year of Study: <strong>{{ student_year_of_study|default:"Not set" }}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    {% if is_resubmission %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Resubmission:</strong> Your previous agreement for Year {{ student_year_of_study }} was rejected. Please review and update the information below, then resubmit.
+                        {% if rejected_agreement %}
+                            <br><small class="mt-1 d-block">
+                                <strong>Rejection Date:</strong> {{ rejected_agreement.updated_at|date:"M d, Y" }}
+                            </small>
+                        {% endif %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>One Agreement Per Year:</strong> Each student can submit only one cost sharing agreement per year of study. 
+                        Current Year of Study: <strong>{{ student_year_of_study }}</strong>.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    {% if not cost_structures_exist %}
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>No cost structures available!</strong> Please contact the Cost Sharing Officer to set up cost structures before submitting an agreement.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" id="costSharingForm" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">Please correct the following errors:</h5>
+                                <ul class="mb-0">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="progress mb-5" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" id="formProgress">0%</div>
+                        </div>
+
+                        <!-- PHOTO UPLOAD SECTION -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-warning text-dark py-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-camera me-2"></i>Student Photo Upload - REQUIRED
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info border-0 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Important:</strong> You must upload a clear student photo for identification purposes.
+                                </div>
+                                
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-upload me-2"></i>Upload Student Photo <span class="text-danger">*</span>
+                                </label>
+                                
+                                <!-- File Upload Container -->
+                                <div class="file-upload-container">
+                                    <!-- Hidden File Input -->
+                                    <input type="file" id="id_receipt" name="receipt" class="d-none" 
+                                           accept=".jpg,.jpeg,.png" {% if not is_resubmission %}required{% endif %}>
+                                    
+                                    <!-- Upload Area -->
+                                    <div class="file-upload-area border-2 border-dashed rounded-3 p-4 text-center mb-3" 
+                                         style="border-color: #dee2e6; background-color: #f8f9fa; cursor: pointer;"
+                                         id="fileUploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">Click to upload or drag and drop</h5>
+                                        <p class="text-muted mb-2">JPG, PNG (Max 5MB)</p>
+                                    </div>
+                                    
+                                    <!-- Upload Button -->
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-primary" id="uploadButton">
+                                            <i class="fas fa-folder-open me-2"></i>Choose Photo
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="photoError" class="alert alert-danger d-none mt-3" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <span id="photoErrorText"></span>
+                                </div>
+                                
+                                <div id="photoPreview" class="mt-3"></div>
+                                
+                                {% if is_resubmission and rejected_agreement.receipt %}
+                                <div class="current-photo mt-3">
+                                    <h6>Current Uploaded Photo:</h6>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-image me-2"></i>
+                                        <a href="{{ rejected_agreement.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            View Current Photo
+                                        </a>
+                                        <small class="text-muted ms-2">Upload a new photo to replace this one</small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Information Section -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-user me-2"></i>Personal Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.full_name.id_for_label }}" class="form-label fw-bold">
+                                            Full Name <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.full_name }}
+                                        {% if form.full_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.full_name.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-bold">
+                                            Phone Number <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.phone_number }}
+                                        {% if form.phone_number.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.phone_number.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label for="{{ form.sex.id_for_label }}" class="form-label fw-bold">
+                                            Sex <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.sex }}
+                                        {% if form.sex.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.sex.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <label for="{{ form.date_of_birth.id_for_label }}" class="form-label fw-bold">
+                                            Date of Birth <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.date_of_birth }}
+                                        {% if form.date_of_birth.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.date_of_birth.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.year_of_entrance.id_for_label }}" class="form-label fw-bold">
+                                            Year of Entrance <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.year_of_entrance }}
+                                        {% if form.year_of_entrance.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.year_of_entrance.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.place_of_birth.id_for_label }}" class="form-label fw-bold">
+                                            Place of Birth <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.place_of_birth }}
+                                        {% if form.place_of_birth.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.place_of_birth.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.mother_name.id_for_label }}" class="form-label fw-bold">
+                                            Mother's Name <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.mother_name }}
+                                        {% if form.mother_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.mother_name.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.mother_phone.id_for_label }}" class="form-label fw-bold">
+                                            Mother's Phone <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.mother_phone }}
+                                        {% if form.mother_phone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.mother_phone.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label for="{{ form.mother_address.id_for_label }}" class="form-label fw-bold">
+                                            Mother's Address <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.mother_address }}
+                                        {% if form.mother_address.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.mother_address.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Educational Background Section -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-graduation-cap me-2"></i>Educational Background
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.preparatory_school.id_for_label }}" class="form-label fw-bold">
+                                            Preparatory School <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.preparatory_school }}
+                                        {% if form.preparatory_school.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.preparatory_school.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="{{ form.high_school_completion_date.id_for_label }}" class="form-label fw-bold">
+                                            High School Completion Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.high_school_completion_date }}
+                                        {% if form.high_school_completion_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.high_school_completion_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.university_name.id_for_label }}" class="form-label fw-bold">
+                                            University Name <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.university_name }}
+                                        {% if form.university_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.university_name.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.faculty.id_for_label }}" class="form-label fw-bold">
+                                            Faculty <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.faculty }}
+                                        {% if form.faculty.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.faculty.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.department.id_for_label }}" class="form-label fw-bold">
+                                            Department <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.department }}
+                                        {% if form.department.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.department.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.department.help_text %}
+                                            <small class="form-text text-muted">{{ form.department.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.year.id_for_label }}" class="form-label fw-bold">
+                                            Year of Study <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.year }}
+                                        {% if form.year.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.year.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.year.help_text %}
+                                            <small class="form-text text-muted">{{ form.year.help_text }}</small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.academic_year.id_for_label }}" class="form-label fw-bold">
+                                            Academic Year <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.academic_year }}
+                                        {% if form.academic_year.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.academic_year.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.is_graduate.id_for_label }}" class="form-label fw-bold">
+                                            Is Graduate <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.is_graduate }}
+                                        {% if form.is_graduate.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.is_graduate.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Information & Automatic Cost Calculation -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-concierge-bell me-2"></i>Service Information & Cost Calculation
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Costs are calculated automatically</strong> based on your department, year, and selected services.
+                                    The Cost Sharing Officer prepares the cost structures.
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="form-check mt-3">
+                                            {{ form.education_service }}
+                                            <label class="form-check-label fw-bold" for="{{ form.education_service.id_for_label }}">
+                                                <i class="fas fa-graduation-cap me-2"></i>Education Service
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check mt-3">
+                                            {{ form.food_service }}
+                                            <label class="form-check-label fw-bold" for="{{ form.food_service.id_for_label }}">
+                                                <i class="fas fa-utensils me-2"></i>Food Service
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check mt-3">
+                                            {{ form.dormitory_service }}
+                                            <label class="form-check-label fw-bold" for="{{ form.dormitory_service.id_for_label }}">
+                                                <i class="fas fa-bed me-2"></i>Dormitory Service
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12 mt-4">
+                                        <div class="card bg-light">
+                                            <div class="card-header">
+                                                <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Cost Breakdown</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row text-center">
+                                                    <div class="col-md-4">
+                                                        <div class="cost-item" data-service="education">
+                                                            <h6>Education Cost</h6>
+                                                            <div id="educationCost" class="cost-amount text-primary fw-bold">ETB 0.00</div>
+                                                            <small class="text-muted">Per semester</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="cost-item" data-service="food">
+                                                            <h6>Food Cost</h6>
+                                                            <div id="foodCost" class="cost-amount text-primary fw-bold">ETB 0.00</div>
+                                                            <small class="text-muted">Per semester</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="cost-item" data-service="dormitory">
+                                                            <h6>Dormitory Cost</h6>
+                                                            <div id="dormitoryCost" class="cost-amount text-primary fw-bold">ETB 0.00</div>
+                                                            <small class="text-muted">Per semester</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <hr>
+                                                
+                                                <div class="row mt-3">
+                                                    <div class="col-12 text-center">
+                                                        <h4 class="mb-2">Total Cost: <span id="totalCostDisplay" class="text-success fw-bold">ETB 0.00</span></h4>
+                                                        <small class="text-muted" id="costMessage">Costs will be calculated based on your department and year</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="{{ form.service_type.id_for_label }}" class="form-label fw-bold">
+                                            Service Type <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.service_type }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="{{ form.payment_type.id_for_label }}" class="form-label fw-bold">
+                                            Payment Type
+                                        </label>
+                                        {{ form.payment_type }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="{{ form.duration.id_for_label }}" class="form-label fw-bold">
+                                            Duration (year)
+                                        </label>
+                                        {{ form.duration }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Withdrawal Information Section -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Withdrawal Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="form-check mt-4">
+                                            {{ form.has_withdrawn }}
+                                            <label class="form-check-label fw-bold" for="{{ form.has_withdrawn.id_for_label }}">
+                                                Has Withdrawn
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 withdrawal-field">
+                                        <label for="{{ form.withdrawal_date.id_for_label }}" class="form-label fw-bold">
+                                            Withdrawal Date
+                                        </label>
+                                        {{ form.withdrawal_date }}
+                                        {% if form.withdrawal_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.withdrawal_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 withdrawal-field">
+                                        <label for="{{ form.withdrawal_month.id_for_label }}" class="form-label fw-bold">
+                                            Month
+                                        </label>
+                                        {{ form.withdrawal_month }}
+                                        {% if form.withdrawal_month.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.withdrawal_month.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 withdrawal-field">
+                                        <label for="{{ form.withdrawal_year.id_for_label }}" class="form-label fw-bold">
+                                            Year
+                                        </label>
+                                        {{ form.withdrawal_year }}
+                                        {% if form.withdrawal_year.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.withdrawal_year.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 withdrawal-field">
+                                        <label for="{{ form.withdrawal_semester.id_for_label }}" class="form-label fw-bold">
+                                            Semester
+                                        </label>
+                                        {{ form.withdrawal_semester }}
+                                        {% if form.withdrawal_semester.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.withdrawal_semester.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transfer Information Section -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-exchange-alt me-2"></i>Transfer Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="form-check mt-4">
+                                            {{ form.has_transferred }}
+                                            <label class="form-check-label fw-bold" for="{{ form.has_transferred.id_for_label }}">
+                                                Has Transferred
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 transfer-field">
+                                        <label for="{{ form.previous_university.id_for_label }}" class="form-label fw-bold">
+                                            Previous University
+                                        </label>
+                                        {{ form.previous_university }}
+                                        {% if form.previous_university.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.previous_university.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3 transfer-field">
+                                        <label for="{{ form.previous_college.id_for_label }}" class="form-label fw-bold">
+                                            Previous College
+                                        </label>
+                                        {{ form.previous_college }}
+                                        {% if form.previous_college.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.previous_college.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3 transfer-field">
+                                        <label for="{{ form.previous_department.id_for_label }}" class="form-label fw-bold">
+                                            Previous Department
+                                        </label>
+                                        {{ form.previous_department }}
+                                        {% if form.previous_department.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.previous_department.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-3 transfer-field">
+                                        <label for="{{ form.transfer_date.id_for_label }}" class="form-label fw-bold">
+                                            Transfer Date
+                                        </label>
+                                        {{ form.transfer_date }}
+                                        {% if form.transfer_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.transfer_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 transfer-field">
+                                        <label for="{{ form.transfer_month.id_for_label }}" class="form-label fw-bold">
+                                            Month
+                                        </label>
+                                        {{ form.transfer_month }}
+                                        {% if form.transfer_month.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.transfer_month.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 transfer-field">
+                                        <label for="{{ form.transfer_year.id_for_label }}" class="form-label fw-bold">
+                                            Year
+                                        </label>
+                                        {{ form.transfer_year }}
+                                        {% if form.transfer_year.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.transfer_year.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 transfer-field">
+                                        <label for="{{ form.transfer_semester.id_for_label }}" class="form-label fw-bold">
+                                            Semester
+                                        </label>
+                                        {{ form.transfer_semester }}
+                                        {% if form.transfer_semester.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.transfer_semester.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3 transfer-field">
+                                        <label for="{{ form.previous_total_cost.id_for_label }}" class="form-label fw-bold">
+                                            Previous Total Cost
+                                        </label>
+                                        {{ form.previous_total_cost }}
+                                        {% if form.previous_total_cost.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.previous_total_cost.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading">Submission Information</h5>
+                                    <p class="mb-0">
+                                        After submitting this agreement, it will be reviewed by the Cost Sharing Officer. 
+                                        You will receive a notification once your agreement has been approved or rejected.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-light py-3">
+                                <h5 class="mb-0 text-primary">
+                                    <i class="fas fa-file-signature me-2"></i>Agreement Terms
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="terms_agree" required>
+                                    <label class="form-check-label fw-bold" for="terms_agree">
+                                        I agree to the terms and conditions of the cost sharing agreement
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="information_correct" required>
+                                    <label class="form-check-label fw-bold" for="information_correct">
+                                        I confirm that all information provided is accurate and complete
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="understand_review" required>
+                                    <label class="form-check-label fw-bold" for="understand_review">
+                                        I understand that this agreement will be reviewed by the Cost Sharing Officer
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4" {% if not cost_structures_exist %}disabled{% endif %}>
+                                <i class="fas fa-paper-plane me-2"></i>
+                                {% if is_resubmission %}Resubmit Agreement{% else %}Submit Agreement{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+.card {
+    border-radius: 15px;
+    border: none;
+}
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+}
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+.progress-bar {
+    border-radius: 10px;
+}
+.withdrawal-field, .transfer-field {
+    display: none !important;
+}
+.form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.text-danger {
+    font-weight: bold;
+}
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+.file-upload-area {
+    transition: all 0.3s ease;
+    border-style: dashed !important;
+}
+.file-upload-area:hover {
+    border-color: #4e73df !important;
+    background-color: #e9ecef !important;
+}
+.file-upload-area.dragover {
+    border-color: #28a745 !important;
+    background-color: #d4edda !important;
+}
+.cost-update {
+    animation: costPulse 0.5s ease-in-out;
+}
+.total-cost-update {
+    animation: totalPulse 0.5s ease-in-out;
+}
+@keyframes costPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+@keyframes totalPulse {
+    0% { transform: scale(1); color: #198754; }
+    50% { transform: scale(1.05); color: #0d6efd; }
+    100% { transform: scale(1); color: #198754; }
+}
+.cost-item {
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+.cost-item:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+#totalCostDisplay {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== VALIDATION FUNCTIONS =====
+    function validatePhoneNumber(phone) {
+        const cleanPhone = phone.replace(/\D/g, '');
+        const pattern = /^09[0-9]{8}$/;
+        return pattern.test(cleanPhone);
+    }
+
+    function validateDateOfBirth(dob) {
+        const birthDate = new Date(dob);
+        const currentDate = new Date();
+        const minBirthDate = new Date();
+        minBirthDate.setFullYear(currentDate.getFullYear() - 10);
+        return birthDate <= minBirthDate;
+    }
+
+    function validateYearOfEntrance(year) {
+        const currentYear = new Date().getFullYear();
+        return year < currentYear;
+    }
+
+    function validateHighSchoolCompletion(date, yearOfStudy) {
+        const completionDate = new Date(date);
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        
+        console.log('Validating high school completion:', date, 'Year of study:', yearOfStudy);
+        console.log('Completion year:', completionDate.getFullYear(), 'Current year:', currentYear);
+        
+        // Must be before current year
+        if (completionDate.getFullYear() >= currentYear) {
+            return { 
+                isValid: false, 
+                message: `High school completion date (${completionDate.getFullYear()}) must be before current year (${currentYear})` 
+            };
+        }
+        
+        // Calculate expected minimum completion year based on year of study
+        // Year 1: completed 1-2 years ago, Year 2: completed 2-3 years ago, etc.
+        const currentYearOfStudy = parseInt(yearOfStudy) || 1;
+        const maxAllowedCompletionYear = currentYear - currentYearOfStudy;
+        
+        console.log('Current year of study:', currentYearOfStudy, 'Max allowed completion year:', maxAllowedCompletionYear);
+        
+        if (completionDate.getFullYear() > maxAllowedCompletionYear) {
+            return { 
+                isValid: false, 
+                message: `High school completion date (${completionDate.getFullYear()}) seems too recent for a Year ${currentYearOfStudy} student. Expected completion year should be ${maxAllowedCompletionYear} or earlier.` 
+            };
+        }
+        
+        return { isValid: true };
+    }
+
+    // ===== PHOTO UPLOAD FUNCTIONALITY =====
+    function initializePhotoUpload() {
+        const fileInput = document.getElementById('id_receipt');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const uploadButton = document.getElementById('uploadButton');
+        const photoPreview = document.getElementById('photoPreview');
+        const photoError = document.getElementById('photoError');
+        const photoErrorText = document.getElementById('photoErrorText');
+
+        function handleFileSelection(file) {
+            photoError.classList.add('d-none');
+            
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!allowedTypes.includes(file.type)) {
+                    photoErrorText.textContent = 'Invalid file type. Please upload JPEG or PNG images only.';
+                    photoError.classList.remove('d-none');
+                    fileInput.value = '';
+                    resetFileUploadArea();
+                    return;
+                }
+                
+                // Validate file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    photoErrorText.textContent = 'File size too large. Please upload files smaller than 5MB.';
+                    photoError.classList.remove('d-none');
+                    fileInput.value = '';
+                    resetFileUploadArea();
+                    return;
+                }
+                
+                // Show preview
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoPreview.innerHTML = `
+                            <div class="alert alert-success">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    <div>
+                                        <strong>Photo selected:</strong> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                                        <div class="mt-2">
+                                            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px; max-width: 200px;">
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Click "Choose Photo" to change photo</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                
+                // Update file upload area
+                fileUploadArea.innerHTML = `
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">Photo Selected</h5>
+                    <p class="text-muted mb-2">${file.name}</p>
+                    <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                `;
+                
+                updateProgress(50);
+            }
+        }
+        
+        function resetFileUploadArea() {
+            fileUploadArea.innerHTML = `
+                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Click to upload or drag and drop</h5>
+                <p class="text-muted mb-2">JPG, PNG (Max 5MB)</p>
+            `;
+            photoPreview.innerHTML = '';
+        }
+
+        // Event listeners
+        fileUploadArea.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        uploadButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+            fileUploadArea.style.borderColor = '#28a745';
+            fileUploadArea.style.backgroundColor = '#d4edda';
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            fileUploadArea.style.borderColor = '#dee2e6';
+            fileUploadArea.style.backgroundColor = '#f8f9fa';
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            fileUploadArea.style.borderColor = '#dee2e6';
+            fileUploadArea.style.backgroundColor = '#f8f9fa';
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                handleFileSelection(file);
+                
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+            }
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+    }
+
+    // Initialize photo upload
+    initializePhotoUpload();
+
+    // ===== REAL-TIME VALIDATION =====
+    function initializeRealTimeValidation() {
+        // Phone number validation
+        const phoneInputs = document.querySelectorAll('input[name="phone_number"], input[name="mother_phone"]');
+        phoneInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                const value = this.value.replace(/\D/g, '');
+                if (this.value && !validatePhoneNumber(value)) {
+                    this.classList.add('is-invalid');
+                    showFieldError(this, 'Phone number must be 10 digits starting with 09 (e.g., 0912345678)');
+                } else {
+                    this.classList.remove('is-invalid');
+                    clearFieldError(this);
+                    // Format the phone number
+                    if (value.length === 10) {
+                        this.value = value;
+                    }
+                }
+            });
+            
+            // Format input as user types
+            input.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                this.value = value;
+            });
+        });
+
+        // Date of birth validation
+        const dobInput = document.querySelector('input[name="date_of_birth"]');
+        if (dobInput) {
+            dobInput.addEventListener('change', function() {
+                if (this.value && !validateDateOfBirth(this.value)) {
+                    this.classList.add('is-invalid');
+                    showFieldError(this, 'Date of birth must be at least 10 years before current date');
+                } else {
+                    this.classList.remove('is-invalid');
+                    clearFieldError(this);
+                }
+            });
+        }
+
+        // Year of entrance validation
+        const yearOfEntranceInput = document.querySelector('input[name="year_of_entrance"]');
+        if (yearOfEntranceInput) {
+            yearOfEntranceInput.addEventListener('blur', function() {
+                const year = parseInt(this.value);
+                if (this.value && !validateYearOfEntrance(year)) {
+                    this.classList.add('is-invalid');
+                    showFieldError(this, 'Year of entrance must be before current year');
+                } else {
+                    this.classList.remove('is-invalid');
+                    clearFieldError(this);
+                }
+            });
+            
+            // Restrict input to numbers only
+            yearOfEntranceInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length > 4) {
+                    this.value = this.value.substring(0, 4);
+                }
+            });
+        }
+
+        // High school completion date validation
+        const highSchoolCompletionInput = document.querySelector('input[name="high_school_completion_date"]');
+        const yearOfStudyInput = document.querySelector('select[name="year"]');
+        
+        if (highSchoolCompletionInput) {
+            const validateHighSchoolDate = () => {
+                if (highSchoolCompletionInput.value) {
+                    const yearOfStudy = yearOfStudyInput ? yearOfStudyInput.value : '1';
+                    const validation = validateHighSchoolCompletion(highSchoolCompletionInput.value, yearOfStudy);
+                    if (!validation.isValid) {
+                        highSchoolCompletionInput.classList.add('is-invalid');
+                        showFieldError(highSchoolCompletionInput, validation.message);
+                        return false;
+                    } else {
+                        highSchoolCompletionInput.classList.remove('is-invalid');
+                        clearFieldError(highSchoolCompletionInput);
+                        return true;
+                    }
+                }
+                return true;
+            };
+            
+            highSchoolCompletionInput.addEventListener('change', validateHighSchoolDate);
+            highSchoolCompletionInput.addEventListener('blur', validateHighSchoolDate);
+            
+            if (yearOfStudyInput) {
+                yearOfStudyInput.addEventListener('change', validateHighSchoolDate);
+            }
+        }
+    }
+
+    // ===== AUTO-FILL STUDENT INFORMATION =====
+    function autoFillStudentData() {
+        const studentData = {
+            fullName: '{{ request.user.get_full_name|escapejs }}',
+            studentId: '{{ request.user.student_id|escapejs }}',
+            department: '{{ student_department|escapejs }}',
+            yearOfStudy: '{{ student_year_of_study|escapejs }}'
+        };
+        
+        const fieldsToAutoFill = {
+            'id_full_name': studentData.fullName,
+            'id_university_name': 'Mekdela Amba University',
+            'id_department': studentData.department,
+            'id_year': studentData.yearOfStudy,
+            'id_academic_year': '{{ current_year }}',
+        };
+        
+        Object.entries(fieldsToAutoFill).forEach(([fieldId, value]) => {
+            const field = document.getElementById(fieldId);
+            if (field && value && value !== 'None' && value !== '') {
+                field.value = value;
+            }
+        });
+        
+        const commonServices = ['id_education_service', 'id_food_service'];
+        commonServices.forEach(serviceId => {
+            const serviceCheckbox = document.getElementById(serviceId);
+            if (serviceCheckbox) {
+                serviceCheckbox.checked = true;
+            }
+        });
+        
+        const serviceTypeField = document.getElementById('id_service_type');
+        if (serviceTypeField && !serviceTypeField.value) {
+            serviceTypeField.value = 'regular';
+        }
+        
+        const paymentTypeField = document.getElementById('id_payment_type');
+        if (paymentTypeField && !paymentTypeField.value) {
+            paymentTypeField.value = 'full';
+        }
+        
+        const durationField = document.getElementById('id_duration');
+        if (durationField && !durationField.value) {
+            durationField.value = '1';
+        }
+        
+        updateProgress(30);
+        setTimeout(() => {
+            if (typeof calculateCosts === 'function') {
+                calculateCosts();
+            }
+        }, 500);
+    }
+
+    // ===== TRANSFER AND WITHDRAWAL FUNCTIONALITY =====
+    function initializeConditionalFields() {
+        let hasWithdrawnCheckbox = document.querySelector('input[name="has_withdrawn"]');
+        let hasTransferredCheckbox = document.querySelector('input[name="has_transferred"]');
+        
+        if (!hasWithdrawnCheckbox) {
+            hasWithdrawnCheckbox = document.querySelector('input[id*="has_withdrawn"]');
+        }
+        if (!hasTransferredCheckbox) {
+            hasTransferredCheckbox = document.querySelector('input[id*="has_transferred"]');
+        }
+        
+        const withdrawalFields = document.querySelectorAll('.withdrawal-field');
+        const transferFields = document.querySelectorAll('.transfer-field');
+        
+        function toggleWithdrawalFields() {
+            const isChecked = hasWithdrawnCheckbox ? hasWithdrawnCheckbox.checked : false;
+            withdrawalFields.forEach((field) => {
+                if (isChecked) {
+                    field.style.setProperty('display', 'block', 'important');
+                } else {
+                    field.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+        
+        function toggleTransferFields() {
+            const isChecked = hasTransferredCheckbox ? hasTransferredCheckbox.checked : false;
+            transferFields.forEach((field) => {
+                if (isChecked) {
+                    field.style.setProperty('display', 'block', 'important');
+                } else {
+                    field.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+        
+        if (hasWithdrawnCheckbox) {
+            hasWithdrawnCheckbox.addEventListener('change', toggleWithdrawalFields);
+            toggleWithdrawalFields();
+        }
+        
+        if (hasTransferredCheckbox) {
+            hasTransferredCheckbox.addEventListener('change', toggleTransferFields);
+            toggleTransferFields();
+        }
+    }
+
+    // ===== COST CALCULATION FUNCTIONALITY =====
+    const educationCheckbox = document.getElementById('{{ form.education_service.id_for_label }}');
+    const foodCheckbox = document.getElementById('{{ form.food_service.id_for_label }}');
+    const dormitoryCheckbox = document.getElementById('{{ form.dormitory_service.id_for_label }}');
+    
+    const educationCostEl = document.getElementById('educationCost');
+    const foodCostEl = document.getElementById('foodCost');
+    const dormitoryCostEl = document.getElementById('dormitoryCost');
+    const totalCostDisplay = document.getElementById('totalCostDisplay');
+    const costMessage = document.getElementById('costMessage');
+
+    async function fetchCostData(department, year) {
+        try {
+            const response = await fetch(`/api/get-cost-data/?department=${encodeURIComponent(department)}&year=${year}`);
+            if (response.ok) {
+                const data = await response.json();
+                return data;
+            } else {
+                return {
+                    error: `Server error: ${response.status}`,
+                    education_cost: 0,
+                    food_cost: 0,
+                    dormitory_cost: 0
+                };
+            }
+        } catch (error) {
+            return {
+                error: 'Network error: ' + error.message,
+                education_cost: 0,
+                food_cost: 0,
+                dormitory_cost: 0
+            };
+        }
+    }
+
+    if (educationCheckbox) educationCheckbox.addEventListener('change', calculateCosts);
+    if (foodCheckbox) foodCheckbox.addEventListener('change', calculateCosts);
+    if (dormitoryCheckbox) dormitoryCheckbox.addEventListener('change', calculateCosts);
+
+    async function calculateCosts() {
+        const department = '{{ student_department|escapejs }}';
+        const year = '{{ student_year_of_study|escapejs }}';
+        
+        let educationCost = 0;
+        let foodCost = 0;
+        let dormitoryCost = 0;
+        let totalCost = 0;
+
+        costMessage.textContent = 'Calculating costs based on your department and year...';
+        costMessage.className = 'text-info';
+
+        if (department && department !== '' && year && year !== '') {
+            costMessage.textContent = 'Loading cost data...';
+            costMessage.className = 'text-info';
+            
+            const costData = await fetchCostData(department, year);
+            
+            if (costData && !costData.error) {
+                const apiEducationCost = parseFloat(costData.education_cost) || 0;
+                const apiFoodCost = parseFloat(costData.food_cost) || 0;
+                const apiDormitoryCost = parseFloat(costData.dormitory_cost) || 0;
+
+                if (educationCheckbox && educationCheckbox.checked) educationCost = apiEducationCost;
+                if (foodCheckbox && foodCheckbox.checked) foodCost = apiFoodCost;
+                if (dormitoryCheckbox && dormitoryCheckbox.checked) dormitoryCost = apiDormitoryCost;
+
+                totalCost = educationCost + foodCost + dormitoryCost;
+
+                if (totalCost > 0) {
+                    costMessage.textContent = `Costs calculated for ${department} - Year ${year}`;
+                    costMessage.className = 'text-success';
+                } else {
+                    costMessage.textContent = 'Please select at least one service';
+                    costMessage.className = 'text-warning';
+                }
+            } else {
+                const defaultEducationCost = 5000;
+                const defaultFoodCost = 2000;
+                const defaultDormitoryCost = 1500;
+
+                if (educationCheckbox && educationCheckbox.checked) educationCost = defaultEducationCost;
+                if (foodCheckbox && foodCheckbox.checked) foodCost = defaultFoodCost;
+                if (dormitoryCheckbox && dormitoryCheckbox.checked) dormitoryCost = defaultDormitoryCost;
+
+                totalCost = educationCost + foodCost + dormitoryCost;
+
+                costMessage.textContent = costData?.error || 'Using default costs - no cost structure found for your department/year';
+                costMessage.className = 'text-warning';
+            }
+        } else {
+            costMessage.textContent = 'Department or year information not available';
+            costMessage.className = 'text-danger';
+        }
+
+        updateCostDisplay(educationCost, foodCost, dormitoryCost, totalCost);
+    }
+
+    function updateCostDisplay(eduCost, foodCost, dormCost, totalCost) {
+        const formatCurrency = (amount) => `ETB ${amount.toLocaleString('en-ET', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+        if (educationCostEl) {
+            educationCostEl.textContent = formatCurrency(eduCost);
+            educationCostEl.classList.add('cost-update');
+            setTimeout(() => educationCostEl.classList.remove('cost-update'), 500);
+        }
+        
+        if (foodCostEl) {
+            foodCostEl.textContent = formatCurrency(foodCost);
+            foodCostEl.classList.add('cost-update');
+            setTimeout(() => foodCostEl.classList.remove('cost-update'), 500);
+        }
+        
+        if (dormitoryCostEl) {
+            dormitoryCostEl.textContent = formatCurrency(dormCost);
+            dormitoryCostEl.classList.add('cost-update');
+            setTimeout(() => dormitoryCostEl.classList.remove('cost-update'), 500);
+        }
+
+        if (totalCostDisplay) {
+            totalCostDisplay.textContent = formatCurrency(totalCost);
+            totalCostDisplay.classList.add('total-cost-update');
+            setTimeout(() => totalCostDisplay.classList.remove('total-cost-update'), 500);
+        }
+    }
+
+    // ===== FORM SUBMISSION =====
+    document.getElementById('costSharingForm').addEventListener('submit', function(e) {
+        const isResubmission = {% if is_resubmission %}true{% else %}false{% endif %};
+        const submitBtn = this.querySelector('button[type="submit"]');
+        
+        let isValid = true;
+
+        // Enhanced validation
+        const phoneInputs = document.querySelectorAll('input[name="phone_number"], input[name="mother_phone"]');
+        phoneInputs.forEach(input => {
+            const value = input.value.replace(/\D/g, '');
+            if (input.value && !validatePhoneNumber(value)) {
+                isValid = false;
+                input.classList.add('is-invalid');
+                showFieldError(input, 'Invalid phone number format');
+            }
+        });
+
+        // Validate date of birth
+        const dobInput = document.querySelector('input[name="date_of_birth"]');
+        if (dobInput && dobInput.value && !validateDateOfBirth(dobInput.value)) {
+            isValid = false;
+            dobInput.classList.add('is-invalid');
+            showFieldError(dobInput, 'Date of birth must be at least 10 years before current date');
+        }
+
+        // Validate year of entrance
+        const yearOfEntranceInput = document.querySelector('input[name="year_of_entrance"]');
+        if (yearOfEntranceInput && yearOfEntranceInput.value) {
+            const year = parseInt(yearOfEntranceInput.value);
+            if (!validateYearOfEntrance(year)) {
+                isValid = false;
+                yearOfEntranceInput.classList.add('is-invalid');
+                showFieldError(yearOfEntranceInput, 'Year of entrance must be before current year');
+            }
+        }
+
+        // Validate high school completion date
+        const highSchoolCompletionInput = document.querySelector('input[name="high_school_completion_date"]');
+        const yearOfStudyInput = document.querySelector('select[name="year"]');
+        if (highSchoolCompletionInput && highSchoolCompletionInput.value) {
+            const yearOfStudy = yearOfStudyInput ? yearOfStudyInput.value : '1';
+            const validation = validateHighSchoolCompletion(highSchoolCompletionInput.value, yearOfStudy);
+            if (!validation.isValid) {
+                isValid = false;
+                highSchoolCompletionInput.classList.add('is-invalid');
+                showFieldError(highSchoolCompletionInput, validation.message);
+            }
+        }
+
+        // Check required fields
+        const requiredFields = this.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (field.type === 'file') {
+                if (!field.files || field.files.length === 0) {
+                    isValid = false;
+                    showFieldError(field, 'This field is required');
+                } else {
+                    clearFieldError(field);
+                }
+            } else if (!field.value.trim()) {
+                isValid = false;
+                showFieldError(field, 'This field is required');
+            } else {
+                clearFieldError(field);
+            }
+        });
+        
+        // Check terms agreement
+        const termsCheckboxes = ['terms_agree', 'information_correct', 'understand_review'];
+        termsCheckboxes.forEach(checkboxId => {
+            const checkbox = document.getElementById(checkboxId);
+            if (checkbox && !checkbox.checked) {
+                isValid = false;
+                showFieldError(checkbox, 'You must agree to all terms');
+            } else if (checkbox) {
+                clearFieldError(checkbox);
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            showAlert('error', 'Please correct the validation errors before submitting.');
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+        
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = `
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            ${isResubmission ? 'Resubmitting...' : 'Submitting...'}
+        `;
+        submitBtn.disabled = true;
+    });
+
+    // ===== HELPER FUNCTIONS =====
+    function showFieldError(field, message) {
+        clearFieldError(field);
+        field.classList.add('is-invalid');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback d-block';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('is-invalid');
+        const existingError = field.parentNode.querySelector('.invalid-feedback');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
+    function showAlert(type, message) {
+        const existingAlerts = document.querySelectorAll('.alert-dismissible');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const firstCard = document.querySelector('.card');
+        if (firstCard) {
+            document.querySelector('.card-body').insertBefore(alertDiv, firstCard);
+        }
+    }
+
+    function updateProgress(percent = 20) {
+        try {
+            const progressEl = document.getElementById('formProgress');
+            if (progressEl) {
+                const p = Math.min(Math.max(percent, 0), 100);
+                progressEl.style.width = p + '%';
+                progressEl.textContent = p + '%';
+            }
+        } catch (err) {
+            console.warn('updateProgress error', err);
+        }
+    }
+
+    // ===== INITIALIZE ALL FUNCTIONALITY =====
+    initializeRealTimeValidation();
+    autoFillStudentData();
+    initializeConditionalFields();
+    setTimeout(calculateCosts, 1000);
+});
+</script>
+{% endblock %}

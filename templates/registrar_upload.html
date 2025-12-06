@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Upload Student Data</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="file" name="file" required>
+  <button class="btn btn-primary">Upload & Assign to Cost Officer</button>
+</form>
+{% endblock %}

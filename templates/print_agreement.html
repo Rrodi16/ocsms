@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Sharing Agreement - {{ agreement.full_name }}</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            body { -webkit-print-color-adjust: exact; }
+        }
+        @media screen {
+            body { background: #f8f9fa; }
+            .print-container { max-width: 800px; margin: 20px auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .print-container {
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px double #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .university-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .agreement-title {
+            font-size: 20px;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            display: inline-block;
+            width: 160px;
+        }
+        .cost-breakdown {
+            background: white;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .total-cost {
+            font-size: 20px;
+            font-weight: bold;
+            color: #27ae60;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            border: 2px solid #27ae60;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .status-accepted { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-pending { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .status-rejected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .services-list {
+            list-style: none;
+            padding: 0;
+        }
+        .services-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+        .services-list li:before {
+            content: "✓ ";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .print-btn {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .print-btn:hover {
+            background: #2980b9;
+        }
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        .cost-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .cost-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .student-photo {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .student-photo img {
+            max-width: 200px;
+            max-height: 250px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .photo-placeholder {
+            padding: 40px;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .cost-details {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cost-row:last-child {
+            border-bottom: none;
+        }
+        .cost-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .cost-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .total-row {
+            font-size: 18px;
+            background: #ecf0f1;
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; padding: 20px; background: white; border-bottom: 2px solid #3498db;">
+        <button class="print-btn" onclick="window.print()">
+            🖨️ Print Agreement
+        </button>
+        {% if request.user.role == 'student' %}
+        <a href="{% url 'view_cost_sharing' %}" class="print-btn" style="background: #95a5a6;">
+            ← Back to My Agreements
+        </a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="print-btn" style="background: #95a5a6;">
+            ← Back to Dashboard
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="print-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="university-name">MEKDELA AMBA UNIVERSITY</div>
+            <div class="agreement-title">COST SHARING AGREEMENT</div>
+            <div style="font-size: 14px; color: #7f8c8d;">
+                Official Student Cost Sharing Agreement Document
+            </div>
+        </div>
+
+        <!-- Student Photo Section -->
+        <div class="section">
+            <div class="section-title">Student Identification Photo</div>
+            <div class="student-photo">
+                {% if agreement.receipt %}
+                    <img src="{{ agreement.receipt.url }}" 
+                         alt="Student Photo of {{ agreement.full_name }}"
+                         onerror="this.style.display='none'; document.getElementById('photo-placeholder').style.display='block';">
+                    <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                        <strong>{{ agreement.full_name }}</strong><br>
+                        Student ID: {{ agreement.student.student_id }}
+                    </div>
+                {% endif %}
+                <div id="photo-placeholder" class="photo-placeholder" {% if agreement.receipt %}style="display: none;"{% endif %}>
+                    <i class="fas fa-user-slash fa-2x"></i><br>
+                    No Student Photo Available
+                </div>
+            </div>
+        </div>
+
+        <!-- Agreement Information -->
+        <div class="section">
+            <div class="section-title">Agreement Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Agreement ID:</span> MAU-CSA-{{ agreement.id|stringformat:"06d" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Academic Year:</span> {{ agreement.academic_year }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date Submitted:</span> {{ agreement.date_filled|date:"F d, Y" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span> 
+                    <span class="status-badge status-{{ agreement.status|lower }}">
+                        {{ agreement.status|upper }}
+                    </span>
+                </div>
+                {% if agreement.date_accepted %}
+                <div class="info-item">
+                    <span class="info-label">Date Accepted:</span> {{ agreement.date_accepted|date:"F d, Y" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Student Information -->
+        <div class="section">
+            <div class="section-title">Student Information</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Student ID:</span> {{ agreement.student.student_id }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Full Name:</span> {{ agreement.full_name }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Sex:</span> {{ agreement.get_sex_display }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date of Birth:</span> {{ agreement.date_of_birth|date:"F d, Y" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Place of Birth:</span> {{ agreement.place_of_birth }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Phone Number:</span> {{ agreement.phone_number }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mother's Name:</span> {{ agreement.mother_name }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mother's Phone:</span> {{ agreement.mother_phone }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mother's Address:</span> {{ agreement.mother_address }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Background -->
+        <div class="section">
+            <div class="section-title">Educational Background</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Preparatory School:</span> {{ agreement.preparatory_school }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">High School Completion:</span> {{ agreement.high_school_completion_date|date:"F d, Y" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">University:</span> {{ agreement.university_name }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Faculty:</span> {{ agreement.faculty }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Department:</span> {{ agreement.department }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Year of Study:</span> {{ agreement.year }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Is Graduate:</span> {{ agreement.is_graduate|yesno:"Yes,No" }}
+                </div>
+            </div>
+        </div>
+<!-- Cost Breakdown -->
+<div class="section">
+    <div class="section-title">Cost Breakdown & Services</div>
+    
+    <!-- Services -->
+    <div style="margin-bottom: 20px;">
+        <h4 style="color: #2c3e50; margin-bottom: 15px;">Selected Services</h4>
+        <ul class="services-list">
+            {% if agreement.education_service %}<li>Education Service</li>{% endif %}
+            {% if agreement.food_service %}<li>Food Service</li>{% endif %}
+            {% if agreement.dormitory_service %}<li>Dormitory Service</li>{% endif %}
+        </ul>
+    </div>
+
+    <!-- Cost Details -->
+    <div class="cost-details">
+        {% if agreement.education_service %}
+        <div class="cost-row">
+            <span class="cost-label">Education Cost</span>
+            <span class="cost-value">ETB {{ calculated_education_cost|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        
+        {% if agreement.food_service %}
+        <div class="cost-row">
+            <span class="cost-label">Food Cost</span>
+            <span class="cost-value">ETB {{ calculated_food_cost|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        
+        {% if agreement.dormitory_service %}
+        <div class="cost-row">
+            <span class="cost-label">Dormitory Cost</span>
+            <span class="cost-value">ETB {{ calculated_dormitory_cost|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="cost-row total-row">
+            <span class="cost-label">TOTAL COST</span>
+            <span class="cost-value">ETB {{ agreement.total_cost|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Service Type:</span> {{ agreement.get_service_type_display|default:"Not specified" }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Payment Type:</span> {{ agreement.get_payment_type_display|default:"Not specified" }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Duration:</span> {{ agreement.duration|default:"1" }} year(s)
+        </div>
+    </div>
+</div>
+        <!-- Additional Information -->
+        {% if agreement.has_withdrawn or agreement.has_transferred %}
+        <div class="section">
+            <div class="section-title">Additional Information</div>
+            <div class="info-grid">
+                {% if agreement.has_withdrawn %}
+                <div class="info-item">
+                    <span class="info-label">Has Withdrawn:</span> Yes
+                </div>
+                {% if agreement.withdrawal_date %}
+                <div class="info-item">
+                    <span class="info-label">Withdrawal Date:</span> {{ agreement.withdrawal_date|date:"F d, Y" }}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% if agreement.has_transferred %}
+                <div class="info-item">
+                    <span class="info-label">Has Transferred:</span> Yes
+                </div>
+                {% if agreement.previous_university %}
+                <div class="info-item">
+                    <span class="info-label">Previous University:</span> {{ agreement.previous_university }}
+                </div>
+                {% endif %}
+                {% if agreement.transfer_date %}
+                <div class="info-item">
+                    <span class="info-label">Transfer Date:</span> {{ agreement.transfer_date|date:"F d, Y" }}
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Mekdela Amba University - Cost Sharing Management System</strong></p>
+            <p>This is an official document. Any alterations without proper authorization are prohibited.</p>
+            <p>Generated on: {% now "F d, Y \a\t H:i" %}</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when loaded in print view
+        if (window.location.search.includes('print=true')) {
+            window.print();
+        }
+
+        // Handle image loading errors
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentPhoto = document.querySelector('.student-photo img');
+            if (studentPhoto) {
+                studentPhoto.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    document.getElementById('photo-placeholder').style.display = 'block';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

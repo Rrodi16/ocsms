@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Print Cost Sharing Agreement - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Cost Sharing Agreement</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Student Information</h5>
+                    <p><strong>Name:</strong> {{ agreement.student.get_full_name }}</p>
+                    <p><strong>Student ID:</strong> {{ agreement.student.student_id }}</p>
+                    <p><strong>Department:</strong> {{ agreement.student.department }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Agreement Details</h5>
+                    <p><strong>Academic Year:</strong> {{ agreement.academic_year }}</p>
+                    <p><strong>Date Filled:</strong> {{ agreement.date_filled }}</p>
+                    <p><strong>Status:</strong> {{ agreement.status }}</p>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5>Services</h5>
+                    <ul>
+                        {% if agreement.education_service %}<li>Education Service</li>{% endif %}
+                        {% if agreement.food_service %}<li>Food Service</li>{% endif %}
+                        {% if agreement.dormitory_service %}<li>Dormitory Service</li>{% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Service Type</h5>
+                    <p>{{ agreement.get_service_type_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Total Cost</h5>
+                    <p>{{ agreement.total_cost }}</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Agreement
+                </button>
+                <a href="{% url 'view_cost_sharing' %}" class="btn btn-secondary">Back to Agreements</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Respond to Feedback - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    {% if not feedback %}
+        <div class="alert alert-warning">Feedback not found.</div>
+    {% else %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Respond to Feedback</h4>
+                </div>
+                <div class="card-body">
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="mb-3">
+                        <h5>Student: {{ feedback.student.get_full_name }}</h5>
+                        <h6>Subject: {{ feedback.subject }}</h6>
+                        <p><strong>Message:</strong> {{ feedback.message }}</p>
+                        <p><small class="text-muted">Submitted on {{ feedback.date_submitted|date:"N j, Y, P" }}</small></p>
+                    </div>
+
+                    <form method="post" onsubmit="return confirmBeforeSubmit()">
+                        <p><small class="text-muted">Submitted on {{ feedback.date_submitted }}</small></p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="response" class="form-label">Your Response</label>
+                            <textarea class="form-control" id="response" name="response" rows="5" required>{{ feedback.response }}</textarea>
+                            {% if feedback.response %}
+                                <div class="form-text text-warning">A response already exists — submitting will overwrite it.</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'view_feedback' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Submit Response</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function confirmBeforeSubmit() {
+    const existing = {{ feedback.response|yesno:"true,false" }};
+    if (existing && !confirm('A response already exists. Are you sure you want to overwrite it?')) {
+        return false;
+    }
+    return true;
+}
+</script>
+</div>
+{% endblock %}

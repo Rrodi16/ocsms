@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Student - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Edit Student: {{ student.full_name }}</h1>
+        <a href="{% url 'dashboard' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Display Messages -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Student Information</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="editStudentForm">
+                        {% csrf_token %}
+                        
+                        <!-- HIDDEN FIELDS for student_id and status -->
+                        <input type="hidden" name="student_id" value="{{ student.student_id }}">
+                        <input type="hidden" name="status" value="{{ student.status|default:'active' }}">
+                        
+                        <!-- Display form errors -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the following errors:</strong>
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Student ID (Read-only Display) -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><strong>Student ID</strong> (Cannot be changed)</label>
+                                    <input type="text" class="form-control" value="{{ student.student_id }}" readonly>
+                                    <small class="form-text text-muted">Student ID cannot be modified for data integrity.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" name="full_name" class="form-control" value="{{ student.full_name }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Information -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Year of Study</label>
+                                    <select class="form-control" name="year_of_study">
+                                        <option value="1" {% if student.year_of_study == 1 %}selected{% endif %}>Year 1</option>
+                                        <option value="2" {% if student.year_of_study == 2 %}selected{% endif %}>Year 2</option>
+                                        <option value="3" {% if student.year_of_study == 3 %}selected{% endif %}>Year 3</option>
+                                        <option value="4" {% if student.year_of_study == 4 %}selected{% endif %}>Year 4</option>
+                                        <option value="5" {% if student.year_of_study == 5 %}selected{% endif %}>Year 5</option>
+                                        <option value="6" {% if student.year_of_study == 6 %}selected{% endif %}>Year 6</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Academic Year *</label>
+                                    <input type="number" name="academic_year" class="form-control" value="{{ student.academic_year }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Year of Entrance *</label>
+                                    <input type="number" name="year_of_entrance" class="form-control" value="{{ student.year_of_entrance }}" 
+                                           min="1900" max="{% now 'Y' %}" required>
+                                    <small class="form-text text-muted">Must be less than or equal to current year</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Department and Faculty -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Department *</label>
+                                    <input type="text" name="department" class="form-control" value="{{ student.department }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Faculty *</label>
+                                    <input type="text" name="faculty" class="form-control" value="{{ student.faculty }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" name="phone_number" class="form-control" value="{{ student.phone_number }}"
+                                           pattern="09[0-9]{8}" maxlength="10" placeholder="09XXXXXXXX">
+                                    <small class="form-text text-muted">Must be 10 digits starting with 09</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Sex</label>
+                                    <select name="sex" class="form-control">
+                                        <option value="M" {% if student.sex == 'M' %}selected{% endif %}>Male</option>
+                                        <option value="F" {% if student.sex == 'F' %}selected{% endif %}>Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Region</label>
+                                    <input type="text" name="region" class="form-control" value="{{ student.region }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Woreda</label>
+                                    <input type="text" name="woreda" class="form-control" value="{{ student.woreda }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Mother's Name</label>
+                                    <input type="text" name="mother_name" class="form-control" value="{{ student.mother_name }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Mother's Phone</label>
+                                    <input type="tel" name="mother_phone" class="form-control" value="{{ student.mother_phone }}"
+                                           pattern="09[0-9]{8}" maxlength="10" placeholder="09XXXXXXXX">
+                                    <small class="form-text text-muted">Must be 10 digits starting with 09</small>
+                                </div>
+                            </div>
+                            <div class="form-group">
+    <label for="virtual_balance">Virtual Balance (ETB) *</label>  <!-- Added * -->
+    <input 
+        type="number" 
+        class="form-control" 
+        id="virtual_balance" 
+        name="virtual_balance" 
+        value="{{ form.virtual_balance.value|default_if_none:'0.00' }}"
+        step="0.01"
+        min="0"
+        required  <!-- ADD THIS -->
+        placeholder="0.00">
+    <small class="form-text text-muted">
+        Student's virtual account balance for making payments
+    </small>
+    {% if form.virtual_balance.errors %}
+        <div class="alert alert-danger">
+            {% for error in form.virtual_balance.errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check mt-4">
+                                        <input type="checkbox" name="is_graduate" class="form-check-input" id="is_graduate" {% if student.is_graduate %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_graduate">
+                                            Is Graduate Student
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status Field (Hidden from user but included in form) -->
+                        <input type="hidden" name="status" value="{{ student.status|default:'active' }}">
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Student
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('editStudentForm').addEventListener('submit', function(e) {
+    const phoneNumber = document.querySelector('input[name="phone_number"]').value;
+    const motherPhone = document.querySelector('input[name="mother_phone"]').value;
+    const yearOfEntrance = document.querySelector('input[name="year_of_entrance"]').value;
+    const currentYear = new Date().getFullYear();
+    
+    // Validate phone number format if provided
+    if (phoneNumber && !/^09[0-9]{8}$/.test(phoneNumber)) {
+        e.preventDefault();
+        alert('Phone number must be 10 digits starting with 09');
+        return false;
+    }
+    
+    // Validate mother's phone format if provided
+    if (motherPhone && !/^09[0-9]{8}$/.test(motherPhone)) {
+        e.preventDefault();
+        alert('Mother\'s phone must be 10 digits starting with 09');
+        return false;
+    }
+    
+    // Validate year of entrance
+    if (parseInt(yearOfEntrance) > currentYear) {
+        e.preventDefault();
+        alert('Year of entrance cannot be greater than current year');
+        return false;
+    }
+});
+</script>
+{% endblock %}

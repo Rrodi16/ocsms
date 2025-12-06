@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment History - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4"><i class="fas fa-history"></i> Payment History</h2>
+    
+    <!-- Payment Summary Section -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Cost</h5>
+                    <p class="card-text display-6">ETB {{ total_cost|floatformat:2 }}</p>
+                    <small class="text-light">
+                        {% if all_agreements %}
+                        {{ all_agreements|length }} agreement{{ all_agreements|length|pluralize }}
+                        {% else %}
+                        No agreements
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Paid</h5>
+                    <p class="card-text display-6">ETB {{ total_paid|floatformat:2 }}</p>
+                    <small class="text-light">
+                        {{ payments|length }} payment{{ payments|length|pluralize }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card {% if remaining_balance > 0 %}bg-danger{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Remaining Balance</h5>
+                    <p class="card-text display-6">ETB {{ remaining_balance|floatformat:2 }}</p>
+                    <small class="text-light">
+                        {% if remaining_balance > 0 %}
+                        <i class="fas fa-exclamation-circle"></i> Payment required
+                        {% else %}
+                        <i class="fas fa-check-circle"></i> Fully paid
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    {% if remaining_balance > 0 %}
+                    <a href="{% url 'make_payment' %}" class="btn btn-light btn-block mb-2">
+                        <i class="fas fa-money-bill-wave"></i> Make Payment
+                    </a>
+                    {% else %}
+                    <span class="text-light mb-2 d-block">
+                        <i class="fas fa-check-circle"></i> All payments completed
+                    </span>
+                    {% endif %}
+                    <button onclick="window.print()" class="btn btn-outline-light btn-block">
+                        <i class="fas fa-print"></i> Print History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    {% if total_cost > 0 %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Overall Payment Progress</h5>
+            <div class="progress" style="height: 30px;">
+                {% widthratio total_paid total_cost 100 as progress_percent %}
+                <div class="progress-bar 
+                    {% if remaining_balance <= 0 %}bg-success
+                    {% elif progress_percent|add:"0" > 50 %}bg-info
+                    {% else %}bg-warning{% endif %}" 
+                     role="progressbar" 
+                     style="width: {{ progress_percent }}%;"
+                     aria-valuenow="{{ progress_percent }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    <strong>{{ progress_percent }}% Complete</strong>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-6 text-left">
+                    <small class="text-muted">Paid: ETB {{ total_paid|floatformat:2 }}</small>
+                </div>
+                <div class="col-6 text-right">
+                    <small class="text-muted">Total: ETB {{ total_cost|floatformat:2 }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Agreement Breakdown Section -->
+    {% if agreement_summaries %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="m-0 font-weight-bold">
+                <i class="fas fa-file-contract"></i> Agreement Breakdown
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Agreement ID</th>
+                            <th>Academic Year</th>
+                            <th>Department</th>
+                            <th>Total Cost</th>
+                            <th>Paid Amount</th>
+                            <th>Remaining</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for summary in agreement_summaries %}
+                        <tr>
+                            <td>#{{ summary.agreement.id }}</td>
+                            <td>{{ summary.agreement.academic_year }}</td>
+                            <td>{{ summary.agreement.department }}</td>
+                            <td class="font-weight-bold">ETB {{ summary.total|floatformat:2 }}</td>
+                            <td class="text-success">ETB {{ summary.paid|floatformat:2 }}</td>
+                            <td class="{% if summary.remaining > 0 %}text-danger font-weight-bold{% else %}text-success{% endif %}">
+                                ETB {{ summary.remaining|floatformat:2 }}
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if summary.payment_progress_pct == 100 %}bg-success
+                                        {% elif summary.payment_progress_pct > 50 %}bg-info
+                                        {% else %}bg-warning{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ summary.payment_progress_pct }}%; min-width: 40px;"
+                                         aria-valuenow="{{ summary.payment_progress_pct }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ summary.payment_progress_pct|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <!-- Total Row -->
+                        <tr class="table-active font-weight-bold">
+                            <td colspan="3" class="text-right">TOTAL:</td>
+                            <td>ETB {{ total_cost|floatformat:2 }}</td>
+                            <td>ETB {{ total_paid|floatformat:2 }}</td>
+                            <td class="{% if remaining_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                ETB {{ remaining_balance|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if total_cost > 0 %}
+                                {% widthratio total_paid total_cost 100 as total_progress %}
+                                {% else %}
+                                {% widthratio 0 1 100 as total_progress %}
+                                {% endif %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if remaining_balance <= 0 %}bg-success
+                                        {% elif total_progress|add:"0" > 50 %}bg-info
+                                        {% else %}bg-warning{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ total_progress }}%; min-width: 40px;"
+                                         aria-valuenow="{{ total_progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ total_progress }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Payment Records Section -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="m-0 font-weight-bold">
+                <i class="fas fa-history"></i> Payment Records
+                <span class="badge bg-light text-primary float-right">{{ payments|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Agreement</th>
+                            <th>Amount Paid</th>
+                            <th>Date Paid</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>Agreement #{{ payment.agreement.id }}</strong>
+                                <small class="text-muted d-block">
+                                    Year: {{ payment.agreement.academic_year }} | 
+                                    Department: {{ payment.agreement.department }}
+                                </small>
+                            </td>
+                            <td class="font-weight-bold text-success">
+                                ETB {{ payment.amount_paid|floatformat:2 }}
+                            </td>
+                            <td>
+                                {{ payment.date_paid|date:"Y-m-d" }}<br>
+                                <small class="text-muted">{{ payment.date_paid|date:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ payment.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if payment.status == 'completed' or payment.status == 'verified' %}bg-success
+                                    {% elif payment.status == 'pending' or payment.status == 'partial' %}bg-warning
+                                    {% elif payment.status == 'failed' or payment.status == 'rejected' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'payment_receipt' payment.id %}" 
+                                   class="btn btn-sm btn-outline-primary"
+                                   title="Download Receipt">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <td colspan="2" class="text-right font-weight-bold">Total Paid:</td>
+                            <td class="font-weight-bold text-success">ETB {{ total_paid|floatformat:2 }}</td>
+                            <td colspan="4"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <!-- Payment Statistics - FIXED SECTION -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="small-box bg-success p-3 rounded">
+                            <h6>Completed Payments</h6>
+                            {% with completed=0 %}
+                                {% for payment in payments %}
+                                    {% if payment.status == 'completed' or payment.status == 'verified' %}
+                                        {% with completed=completed|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                <p class="mb-0">{{ completed }}</p>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small-box bg-warning p-3 rounded">
+                            <h6>Pending Payments</h6>
+                            {% with pending=0 %}
+                                {% for payment in payments %}
+                                    {% if payment.status == 'pending' %}
+                                        {% with pending=pending|add:1 %}{% endwith %}
+                                    {% endif %}
+                                {% endfor %}
+                                <p class="mb-0">{{ pending }}</p>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small-box bg-info p-3 rounded">
+                            <h6>Average Payment</h6>
+                            {% if payments|length > 0 %}
+                                {% widthratio total_paid payments|length 1 as avg_payment %}
+                                <p class="mb-0">ETB {{ avg_payment|floatformat:2 }}</p>
+                            {% else %}
+                                <p class="mb-0">ETB 0.00</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small-box bg-light p-3 rounded">
+                            <h6>Last Payment</h6>
+                            {% if payments.0 %}
+                                <p class="mb-0">{{ payments.0.date_paid|date:"M d, Y" }}</p>
+                            {% else %}
+                                <p class="mb-0">No payments</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-money-bill-wave fa-4x text-muted mb-4"></i>
+                <h4>No payment records found</h4>
+                <p class="text-muted mb-4">You haven't made any payments yet.</p>
+                {% if remaining_balance > 0 %}
+                <a href="{% url 'make_payment' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-money-bill-wave"></i> Make Your First Payment
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

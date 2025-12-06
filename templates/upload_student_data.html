@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Student Data - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Upload Student Data</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5>📋 Instructions</h5>
+                        <p>Please upload a CSV file with the following columns <strong>exactly as shown</strong>:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><strong>Full Name</strong> (required)</li>
+                                    <li><strong>Student ID</strong> (required, unique)</li>
+                                    <li><strong>Sex</strong> (M/F)</li>
+                                    <li><strong>Region</strong></li>
+                                    <li><strong>Woreda</strong></li>
+                                    <li><strong>Phone Number</strong></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><strong>Faculty</strong></li>
+                                    <li><strong>Year of Entrance</strong> (number)</li>
+                                    <li><strong>Department</strong></li>
+                                    <li><strong>Academic Year</strong> (number, e.g., 2024)</li>
+                                    <li><strong>Mother Name</strong></li>
+                                    <li><strong>Mother Phone</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">CSV File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                            <div class="form-text">File must be in CSV format with the exact column names above.</div>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Upload Data</button>
+                        </div>
+                    </form>
+
+                    <!-- Sample CSV Data -->
+                    <div class="mt-4">
+                        <h6>📊 Sample CSV Format:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <th>Student ID</th>
+                                        <th>Sex</th>
+                                        <th>Region</th>
+                                        <th>Woreda</th>
+                                        <th>Phone Number</th>
+                                        <th>Faculty</th>
+                                        <th>Year of Entrance</th>
+                                        <th>Department</th>
+                                        <th>Academic Year</th>
+                                        <th>Mother Name</th>
+                                        <th>Mother Phone</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Begizew Dilnesa</td>
+                                        <td>STU001</td>
+                                        <td>M</td>
+                                        <td>Addis Ababa</td>
+                                        <td>Kirkos</td>
+                                        <td>0912345678</td>
+                                        <td>Computing</td>
+                                        <td>2024</td>
+                                        <td>Computer Science</td>
+                                        <td>2024</td>
+                                        <td>Jane Doe</td>
+                                        <td>0911223344</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+<!-- templates/post_notice.html -->
+{% extends 'base.html' %}
+{% block title %}Post Notice - OCSMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>Post New Notice
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="noticeForm">
+                        {% csrf_token %}
+                        
+                        <!-- Title Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                Notice Title *
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.content.id_for_label }}" class="form-label fw-bold">
+                                Notice Content
+                            </label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                            <div class="text-danger small mt-1">{{ form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Image Upload Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">
+                                Notice Image (Optional)
+                            </label>
+                            <div class="input-group">
+                                {{ form.image }}
+                            </div>
+                            {% if form.image.errors %}
+                            <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.image.help_text }}</div>
+                            
+                            <!-- Image Preview -->
+                            <div id="imagePreview" class="mt-2 text-center" style="display: none;">
+                                <img id="preview" class="img-thumbnail" style="max-width: 400px; max-height: 300px; object-fit: contain;">
+                                <div class="mt-1">
+                                    <button type="button" id="removeImage" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Remove Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audience Field -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Visible To *</label>
+                            <div class="border rounded p-3">
+                                <div class="row">
+                                    {% for choice_id, choice_label in form.fields.audience.choices %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="audience" 
+                                                   value="{{ choice_id }}" 
+                                                   id="audience_{{ choice_id }}"
+                                                   {% if choice_id in form.audience.value %}checked{% endif %}>
+                                            <label class="form-check-label" for="audience_{{ choice_id }}">
+                                                {{ choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if form.audience.errors %}
+                            <div class="text-danger small mt-1">{{ form.audience.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.audience.help_text }}</div>
+                        </div>
+
+                        <!-- Expiry Date Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label fw-bold">
+                                Expiry Date
+                            </label>
+                            {{ form.expiry_date }}
+                            {% if form.expiry_date.errors %}
+                            <div class="text-danger small mt-1">{{ form.expiry_date.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.expiry_date.help_text }}</div>
+                        </div>
+
+                        <!-- Active Field -->
+                        <div class="mb-3 form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active (Visible to users)
+                            </label>
+                            {% if form.is_active.errors %}
+                            <div class="text-danger small mt-1">{{ form.is_active.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">{{ form.is_active.help_text }}</div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'view_notices' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Post Notice
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Image Preview -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('id_image');
+    const preview = document.getElementById('preview');
+    const previewDiv = document.getElementById('imagePreview');
+    const removeBtn = document.getElementById('removeImage');
+    
+    // Image preview functionality
+    imageInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                previewDiv.style.display = 'block';
+            }
+            
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    // Remove image functionality
+    removeBtn.addEventListener('click', function() {
+        imageInput.value = '';
+        preview.src = '';
+        previewDiv.style.display = 'none';
+    });
+    
+    // Check if there's an existing image (for edit mode)
+   const currentImageUrl = '{% if form.instance.image and form.instance.image.url %}{{ form.instance.image.url }}{% else %}{% endif %}';
+    if (currentImageUrl) {
+        preview.src = currentImageUrl;
+        previewDiv.style.display = 'block';
+    }
+    
+    // Set minimum expiry date to tomorrow
+    const expiryInput = document.querySelector('input[name="expiry_date"]');
+    if (expiryInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const minDate = tomorrow.toISOString().slice(0, 16);
+        expiryInput.min = minDate;
+    }
+});
+</script>
+
+<style>
+.img-thumbnail {
+    border: 2px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+}
+
+#imagePreview {
+    transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+</style>
+{% endblock %}

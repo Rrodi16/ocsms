@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Feedback Detail - OCSMS{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'student_feedback_list' %}" class="btn btn-sm btn-secondary mb-3">← Back to My Feedback</a>
+  <div class="card shadow">
+    <div class="card-body">
+      <h5>{{ feedback.subject }}</h5>
+      <p class="text-muted">Submitted on {{ feedback.date_submitted|date:"N j, Y, P" }}</p>
+      <hr>
+      <h6>Message</h6>
+      <p>{{ feedback.message }}</p>
+      <hr>
+      <h6>Response</h6>
+      {% if feedback.status == 'responded' and feedback.response %}
+        <div class="alert alert-success">
+          <strong>Responded on:</strong> {{ feedback.date_responded|date:"N j, Y, P" }}<br>
+          {{ feedback.response }}
+        </div>
+      {% else %}
+        <div class="alert alert-info">No response yet. Please check back later.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
